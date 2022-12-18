@@ -3,10 +3,23 @@ package wrapper
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 )
+
+// ErrHttpRequest indicates that something wrong happened in http request
+type ErrHttpRequest struct {
+	statusCode int
+}
+
+func (e ErrHttpRequest) Error() string {
+	return fmt.Sprintf("http status not ok: %d\n", e.statusCode)
+}
+
+func (e ErrHttpRequest) GetHttpStatusCode() int {
+	return e.statusCode
+}
 
 const DefaultURL = "https://fantasy.premierleague.com/api"
 
@@ -54,13 +67,11 @@ func (w *Wrapper) fetchData(url string, data interface{}) error {
 	}
 	defer resp.Body.Close()
 
-	// TODO consider improving/adding custom error types
-
 	if resp.StatusCode != http.StatusOK {
-		return err
+		return ErrHttpRequest{resp.StatusCode}
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
