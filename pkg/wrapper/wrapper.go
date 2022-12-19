@@ -46,7 +46,7 @@ func (w *Wrapper) GetPlayers() ([]Player, error) {
 
 	err := w.fetchData(url, &bs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetPlayers: %w", err)
 	}
 
 	return bs.Players, nil
@@ -57,28 +57,28 @@ func (w *Wrapper) GetPlayers() ([]Player, error) {
 func (w *Wrapper) fetchData(url string, data interface{}) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetchData, creating new request failed: %w", err)
 	}
 	req.Header.Set("User-Agent", "app")
 
 	resp, err := w.client.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetchData, sending http request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return ErrHttpRequest{resp.StatusCode}
+		return fmt.Errorf("fetchData, http request failed: %w", ErrHttpRequest{resp.StatusCode})
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetchData, reading response body failed: %w", err)
 	}
 
 	err = json.Unmarshal(body, data)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetchData, unmarshalling data failed: %w", err)
 	}
 
 	return nil

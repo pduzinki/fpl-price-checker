@@ -1,6 +1,7 @@
 package wrapper
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -54,7 +55,7 @@ func TestFetchData(t *testing.T) {
 		var data tmp
 
 		err := w.fetchData(w.baseURL, &data)
-		if err != test.wantErr {
+		if !errors.Is(err, test.wantErr) {
 			t.Errorf("want: %d, got: %d", test.wantErr, err)
 		}
 	}
