@@ -8,17 +8,17 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/storage"
 )
 
-var testPlayers = []domain.Player{
-	{ID: 1, Name: "Kane", Price: 120, SelectedBy: "12%"},
-	{ID: 2, Name: "Salah", Price: 130, SelectedBy: "22%"},
-	{ID: 3, Name: "Haaland", Price: 125, SelectedBy: "80%"},
+var testPlayers = map[int]domain.Player{
+	1: {ID: 1, Name: "Kane", Price: 120, SelectedBy: "12%"},
+	2: {ID: 2, Name: "Salah", Price: 130, SelectedBy: "22%"},
+	3: {ID: 3, Name: "Haaland", Price: 125, SelectedBy: "80%"},
 }
 
 func TestDailyPlayersDataRepositoryAdd(t *testing.T) {
 	testcases := []struct {
 		name    string
 		date    string
-		players []domain.Player
+		players map[int]domain.Player
 		want    error
 	}{
 		{
@@ -33,10 +33,11 @@ func TestDailyPlayersDataRepositoryAdd(t *testing.T) {
 			players: testPlayers,
 			want:    storage.ErrDataAlreadyExists,
 		},
+		// TODO add case "date format wrong"
 	}
 
 	dailyPlayersDataRepo := DailyPlayersDataRepository{
-		dailyPlayers: map[string][]domain.Player{
+		dailyPlayers: map[string]map[int]domain.Player{
 			"2022-03-14": testPlayers,
 		},
 	}
@@ -49,7 +50,7 @@ func TestDailyPlayersDataRepositoryAdd(t *testing.T) {
 			t.Errorf("want: %v, got: %v", test.want, got)
 		}
 
-		if got != nil {
+		if got == nil {
 			continue
 		}
 
