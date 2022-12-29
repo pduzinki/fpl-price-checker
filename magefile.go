@@ -11,7 +11,7 @@ import (
 )
 
 func Clear() error {
-	return sh.Run("rm", "app", "-f")
+	return sh.Run("rm", "fpc", "-f")
 }
 
 func Build() error {
@@ -25,7 +25,7 @@ func Build() error {
 		"GOOS":   runtime.GOOS,
 		"GOARCH": runtime.GOARCH,
 	}
-	_, err := sh.Exec(env, os.Stdout, os.Stderr, "go", "build", "-v", "-ldflags="+"-w -s", "-o", "app", "./cmd/server")
+	_, err := sh.Exec(env, os.Stdout, os.Stderr, "go", "build", "-v", "-ldflags="+"-w -s", "-o", "fpc", "./cmd")
 
 	return err
 }
