@@ -1,4 +1,5 @@
 TODO
 /app
 /fpc
+/data
 pkg/storage/fs/data/*
