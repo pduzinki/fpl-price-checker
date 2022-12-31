@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sync"
@@ -20,7 +19,7 @@ type DailyPlayersDataRepository struct {
 }
 
 func NewDailyPlayersDataRepository(folderPath string) (DailyPlayersDataRepository, error) {
-	err := os.MkdirAll(folderPath, fs.ModeDir)
+	err := os.MkdirAll(folderPath, 0755)
 	if err != nil {
 		return DailyPlayersDataRepository{}, fmt.Errorf("failed to create daily players data repository: %w", err)
 	}
@@ -54,7 +53,7 @@ func (dr *DailyPlayersDataRepository) Add(_ context.Context, date string, player
 	}
 
 	if _, err := f.Write(jsonPlayers); err != nil {
-		return fmt.Errorf("fs.Add, faile to write data into file: %w", err)
+		return fmt.Errorf("fs.Add, failed to write data into file: %w", err)
 	}
 
 	return nil
