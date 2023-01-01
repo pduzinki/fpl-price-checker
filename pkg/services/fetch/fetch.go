@@ -24,8 +24,8 @@ type FetchService struct {
 	sa StorageAdder  // TODO find a better name for this interface
 }
 
-func NewFetchService(pg PlayersGetter, sa StorageAdder) FetchService {
-	return FetchService{
+func NewFetchService(pg PlayersGetter, sa StorageAdder) *FetchService {
+	return &FetchService{
 		pg: pg,
 		sa: sa,
 	}
