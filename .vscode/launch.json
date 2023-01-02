@@ -10,8 +10,9 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceRoot}/cmd/",
+            "cwd": "${workspaceRoot}/",
             "env": {},
-            "args": ["fetch"],
+            "args": ["gen"],
         }
     ]
 }

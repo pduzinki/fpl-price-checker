@@ -12,7 +12,7 @@ import (
 func NewFetchService() (*fetch.FetchService, error) {
 	wr := wrapper.NewWrapper()
 
-	st, err := fs.NewDailyPlayersDataRepository("./data")
+	st, err := fs.NewDailyPlayersDataRepository("./data/players/")
 	if err != nil {
 		return nil, fmt.Errorf("di NewFetchService, failed to create players data repository: %w", err)
 	}
@@ -22,10 +22,15 @@ func NewFetchService() (*fetch.FetchService, error) {
 }
 
 func NewGenerateService() (*generate.GenerateService, error) {
-	st, err := fs.NewDailyPlayersDataRepository("./data")
+	st, err := fs.NewDailyPlayersDataRepository("./data/players/") // TODO move to separate function
 	if err != nil {
 		return nil, fmt.Errorf("di NewGenerateService, failed to create players data repository: %w", err)
 	}
 
-	return generate.NewGenerateService(&st), nil
+	ra, err := fs.NewPriceReportRepository("./data/reports/") // TODO move to separate function
+	if err != nil {
+		return nil, fmt.Errorf("di NewGenerateService, failed to price reports data repository: %w", err)
+	}
+
+	return generate.NewGenerateService(&st, ra), nil
 }
