@@ -23,7 +23,9 @@ func NewPriceReportRepository(folderPath string) (*PriceReportRepository, error)
 		return nil, fmt.Errorf("failed to create price report data repository: %w", err)
 	}
 
-	return &PriceReportRepository{}, nil
+	return &PriceReportRepository{
+		folderPath: folderPath,
+	}, nil
 }
 
 func (pr *PriceReportRepository) Add(_ context.Context, date string, report domain.PriceChangeReport) error {
