@@ -1,36 +1,53 @@
 package di
 
 import (
-	"fmt"
-
+	"github.com/pduzinki/fpl-price-checker/pkg/rest"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/fetch"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/generate"
 	"github.com/pduzinki/fpl-price-checker/pkg/storage/fs"
 	"github.com/pduzinki/fpl-price-checker/pkg/wrapper"
+
+	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 )
 
-func NewFetchService() (*fetch.FetchService, error) {
-	wr := wrapper.NewWrapper()
+func Wrapper() *wrapper.Wrapper {
+	return wrapper.NewWrapper()
+}
 
-	st, err := fs.NewDailyPlayersDataRepository("./data/players/")
+func DailyPlayersDataRepository() *fs.DailyPlayersDataRepository {
+	dr, err := fs.NewDailyPlayersDataRepository("./data/players/")
 	if err != nil {
-		return nil, fmt.Errorf("di NewFetchService, failed to create players data repository: %w", err)
+		log.Fatal().Err(err).Msg("di.DailyPlayersDataRepository failed")
 	}
 
-	return fetch.NewFetchService(&wr, &st), nil
+	return dr
+}
+
+func NewPriceReportRepository() *fs.PriceReportRepository {
+	rr, err := fs.NewPriceReportRepository("./data/reports/")
+	if err != nil {
+		log.Fatal().Err(err).Msg("di.NewPriceReportRepository failed")
+	}
+
+	return rr
+}
+
+func NewFetchService() (*fetch.FetchService, error) {
+	wr := Wrapper()
+	dr := DailyPlayersDataRepository()
+
+	return fetch.NewFetchService(wr, dr), nil
 
 }
 
 func NewGenerateService() (*generate.GenerateService, error) {
-	st, err := fs.NewDailyPlayersDataRepository("./data/players/") // TODO move to separate function
-	if err != nil {
-		return nil, fmt.Errorf("di NewGenerateService, failed to create players data repository: %w", err)
-	}
+	pr := DailyPlayersDataRepository()
+	rr := NewPriceReportRepository()
 
-	ra, err := fs.NewPriceReportRepository("./data/reports/") // TODO move to separate function
-	if err != nil {
-		return nil, fmt.Errorf("di NewGenerateService, failed to price reports data repository: %w", err)
-	}
+	return generate.NewGenerateService(pr, rr), nil
+}
 
-	return generate.NewGenerateService(&st, ra), nil
+func NewServer() *echo.Echo {
+	return rest.NewServer()
 }

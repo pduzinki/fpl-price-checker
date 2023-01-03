@@ -29,8 +29,8 @@ type Wrapper struct {
 }
 
 // NewWrapper returns new instance of Wrapper
-func NewWrapper() Wrapper {
-	return Wrapper{
+func NewWrapper() *Wrapper {
+	return &Wrapper{
 		client: &http.Client{
 			Timeout: time.Second * 10,
 		},
