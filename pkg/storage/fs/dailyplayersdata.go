@@ -18,13 +18,13 @@ type DailyPlayersDataRepository struct {
 	sync.RWMutex
 }
 
-func NewDailyPlayersDataRepository(folderPath string) (DailyPlayersDataRepository, error) {
+func NewDailyPlayersDataRepository(folderPath string) (*DailyPlayersDataRepository, error) {
 	err := os.MkdirAll(folderPath, 0755)
 	if err != nil {
-		return DailyPlayersDataRepository{}, fmt.Errorf("failed to create daily players data repository: %w", err)
+		return nil, fmt.Errorf("failed to create daily players data repository: %w", err)
 	}
 
-	return DailyPlayersDataRepository{
+	return &DailyPlayersDataRepository{
 		folderPath: folderPath,
 	}, nil
 }
