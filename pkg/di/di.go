@@ -49,5 +49,9 @@ func NewGenerateService() (*generate.GenerateService, error) {
 }
 
 func NewServer() *echo.Echo {
-	return rest.NewServer()
+	rr := NewPriceReportRepository()
+
+	s := rest.NewServer(rr)
+
+	return s
 }

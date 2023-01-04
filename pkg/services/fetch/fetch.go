@@ -9,8 +9,6 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/wrapper"
 )
 
-const dateFormat = "2006-01-02"
-
 type PlayersGetter interface {
 	GetPlayers() ([]wrapper.Player, error)
 }
@@ -43,7 +41,7 @@ func (fs *FetchService) Fetch() error {
 		playersMap[p.ID] = toDomainPlayer(&p)
 	}
 
-	todaysDate := time.Now().Format(dateFormat)
+	todaysDate := time.Now().Format(domain.DateFormat)
 
 	err = fs.sa.Add(context.TODO(), todaysDate, playersMap)
 	if err != nil {

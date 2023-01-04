@@ -60,11 +60,26 @@ func (pr *PriceReportRepository) Add(_ context.Context, date string, report doma
 	return nil
 }
 
-func (pr *PriceReportRepository) GetByDate(_ context.Context, date string) (*domain.PriceChangeReport, error) {
+func (pr *PriceReportRepository) GetByDate(_ context.Context, date string) (domain.PriceChangeReport, error) {
 	pr.Lock()
 	defer pr.Unlock()
 
-	// TODO
+	var report domain.PriceChangeReport
 
-	return nil, fmt.Errorf("unimplemented")
+	filename := filepath.Join(pr.folderPath, date)
+
+	if _, err := os.Stat(filename); err != nil {
+		return report, fmt.Errorf("fs.PriceReportRepository.GetByDate, failed to fetch file info: %w", err)
+	}
+
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return report, fmt.Errorf("fs.PriceReportRepository.GetByDate, failed to read file: %w", err)
+	}
+
+	if err := json.Unmarshal(data, &report); err != nil {
+		return report, fmt.Errorf("fs.PriceReportRepository.GetByDate, failed to unmarshal data: %w", err)
+	}
+
+	return report, nil
 }
