@@ -8,8 +8,6 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
 )
 
-const dateFormat = "2006-01-02" // TODO perhaps move to domain?
-
 type StorageGetter interface {
 	GetByDate(_ context.Context, date string) (map[int]domain.Player, error)
 }
@@ -31,8 +29,8 @@ func NewGenerateService(sg StorageGetter, ra ReportAdder) *GenerateService {
 }
 
 func (gs *GenerateService) GeneratePriceReport() error {
-	todaysDate := time.Now().Format(dateFormat)
-	yesterdaysDate := time.Now().Add(-24 * time.Hour).Format(dateFormat)
+	todaysDate := time.Now().Format(domain.DateFormat)
+	yesterdaysDate := time.Now().Add(-24 * time.Hour).Format(domain.DateFormat)
 
 	yesterdayPlayers, err := gs.sg.GetByDate(context.TODO(), yesterdaysDate)
 	if err != nil {

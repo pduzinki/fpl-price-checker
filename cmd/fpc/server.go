@@ -3,6 +3,7 @@ package fpc
 import (
 	"fmt"
 
+	"github.com/pduzinki/fpl-price-checker/pkg/di"
 	"github.com/spf13/cobra"
 )
 
@@ -13,11 +14,9 @@ var serverCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("fpc start-server command")
 
-		// TODO add later
+		s := di.NewServer()
 
-		// TODO remove that later
-		ch := make(chan int)
-		<-ch // wait forever
+		s.Start(":8080")
 	},
 }
 
