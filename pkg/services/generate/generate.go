@@ -34,12 +34,12 @@ func (gs *GenerateService) GeneratePriceReport() error {
 
 	yesterdayPlayers, err := gs.sg.GetByDate(context.TODO(), yesterdaysDate)
 	if err != nil {
-		return fmt.Errorf("err 1: %w", err) // TODO
+		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get yesterday's players data: %w", err)
 	}
 
 	todayPlayers, err := gs.sg.GetByDate(context.TODO(), todaysDate)
 	if err != nil {
-		return fmt.Errorf("err 2: %w", err) // TODO
+		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get today's players data: %w", err)
 	}
 
 	report := domain.PriceChangeReport{
@@ -48,17 +48,17 @@ func (gs *GenerateService) GeneratePriceReport() error {
 	}
 
 	priceChangedPlayers := make([]domain.Record, 0)
-	// newPlayers := make([]domain.Record, 0)
+	newPlayers := make([]domain.Record, 0)
 
 	for tk, tv := range todayPlayers {
 		yv, prs := yesterdayPlayers[tk]
 		if !prs {
-			// newPlayers = append(newPlayers, domain.Record{
-			// 	Name:        tv.Name,
-			// 	OldPrice:    "-",
-			// 	NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
-			// 	Description: "new",
-			// })
+			newPlayers = append(newPlayers, domain.Record{
+				Name:        tv.Name,
+				OldPrice:    "-",
+				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
+				Description: "new",
+			})
 			continue
 		}
 
@@ -72,14 +72,13 @@ func (gs *GenerateService) GeneratePriceReport() error {
 
 			priceChangedPlayers = append(priceChangedPlayers, record)
 		}
-
-		// report.Records = append(priceChangedPlayers, newPlayers...)
-		report.Records = priceChangedPlayers
 	}
+
+	report.Records = append(priceChangedPlayers, newPlayers...)
 
 	err = gs.ra.Add(context.TODO(), todaysDate, report)
 	if err != nil {
-		return fmt.Errorf("err 33: %w", err) // TODO
+		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to save report: %w", err)
 	}
 
 	return nil
