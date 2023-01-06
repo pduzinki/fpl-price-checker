@@ -38,7 +38,11 @@ func (fs *FetchService) Fetch() error {
 	playersMap := make(map[int]domain.Player)
 
 	for _, p := range players {
-		playersMap[p.ID] = toDomainPlayer(&p)
+		p, err := toDomainPlayer(&p)
+		if err != nil {
+			return fmt.Errorf("fetch.Fetch failed to convert player value: %w", err)
+		}
+		playersMap[p.ID] = p
 	}
 
 	todaysDate := time.Now().Format(domain.DateFormat)
@@ -51,11 +55,16 @@ func (fs *FetchService) Fetch() error {
 	return nil
 }
 
-func toDomainPlayer(wp *wrapper.Player) domain.Player {
+func toDomainPlayer(wp *wrapper.Player) (domain.Player, error) {
+	// selectedBy, err := strconv.ParseFloat(wp.SelectedBy, 32)
+	// if err != nil {
+	// 	return domain.Player{}, fmt.Errorf("fetch.toDomainPlayer failed to parse float value: %w", err)
+	// }
+
 	return domain.Player{
 		ID:         wp.ID,
 		Name:       wp.WebName,
 		Price:      wp.Price,
 		SelectedBy: wp.SelectedBy,
-	}
+	}, nil
 }

@@ -9,11 +9,11 @@ import (
 )
 
 type StorageGetter interface {
-	GetByDate(_ context.Context, date string) (map[int]domain.Player, error)
+	GetByDate(ctx context.Context, date string) (map[int]domain.Player, error)
 }
 
 type ReportAdder interface {
-	Add(_ context.Context, date string, report domain.PriceChangeReport) error
+	Add(ctx context.Context, date string, report domain.PriceChangeReport) error
 }
 
 type GenerateService struct {
@@ -43,28 +43,38 @@ func (gs *GenerateService) GeneratePriceReport() error {
 	}
 
 	report := domain.PriceChangeReport{
+		Date:    todaysDate,
 		Records: make([]domain.Record, 0),
 	}
+
+	priceChangedPlayers := make([]domain.Record, 0)
+	// newPlayers := make([]domain.Record, 0)
 
 	for tk, tv := range todayPlayers {
 		yv, prs := yesterdayPlayers[tk]
 		if !prs {
-			// fmt.Println("new:", tv.Name, tv.Price) // TODO no sure if newly added players should be reported
+			// newPlayers = append(newPlayers, domain.Record{
+			// 	Name:        tv.Name,
+			// 	OldPrice:    "-",
+			// 	NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
+			// 	Description: "new",
+			// })
 			continue
 		}
 
 		if yv.Price != tv.Price {
 			record := domain.Record{
 				Name:        tv.Name,
-				OldPrice:    float64(yv.Price) / 10.,
-				NewPrice:    float64(tv.Price) / 10.,
+				OldPrice:    fmt.Sprintf("%.1f", float64(yv.Price)/10.),
+				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
 				Description: addDescription(yv.Price, tv.Price),
 			}
 
-			fmt.Println(record)
-
-			report.Records = append(report.Records, record)
+			priceChangedPlayers = append(priceChangedPlayers, record)
 		}
+
+		// report.Records = append(priceChangedPlayers, newPlayers...)
+		report.Records = priceChangedPlayers
 	}
 
 	err = gs.ra.Add(context.TODO(), todaysDate, report)
