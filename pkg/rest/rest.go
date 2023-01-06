@@ -28,6 +28,8 @@ func GetLatest(rg ReportGetter) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		todaysDate := time.Now().Format(domain.DateFormat)
 
+		// TODO if there's not report for today (i.e. it's like 1am in the morning, so no price changes occured yet), then return the previous one
+
 		report, err := rg.GetByDate(c.Request().Context(), todaysDate)
 		if err != nil {
 			log.Error().Err(err).Msg("rest.GetLatest failed to get report")
