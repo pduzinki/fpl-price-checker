@@ -35,7 +35,7 @@ func GetLatest(rg ReportGetter) func(c echo.Context) error {
 		// NOTE: FPL price changes usually occur around 1:30am GMT, so there's a time gap,
 		// where there's no "today's" report just yet. in that case, latest will be a report from the day before.
 
-		report, err := rg.GetByDate(c.Request().Context(), todaysDate) // TODO use multi err??
+		report, err := rg.GetByDate(c.Request().Context(), todaysDate)
 		if err == nil {
 			c.JSONPretty(http.StatusOK, report, "  ")
 
