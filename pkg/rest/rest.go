@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"go.uber.org/multierr"
 
 	"github.com/rs/zerolog/log"
 )
@@ -27,18 +28,31 @@ func NewServer(rg ReportGetter) *echo.Echo {
 func GetLatest(rg ReportGetter) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		todaysDate := time.Now().Format(domain.DateFormat)
+		yesterdaysDate := time.Now().Add(-24 * time.Hour).Format(domain.DateFormat)
 
-		// TODO if there's not report for today (i.e. it's like 1am in the morning, so no price changes occured yet), then return the previous one
+		var errors error
 
-		report, err := rg.GetByDate(c.Request().Context(), todaysDate)
-		if err != nil {
-			log.Error().Err(err).Msg("rest.GetLatest failed to get report")
-			return err
+		// NOTE: FPL price changes usually occur around 1:30am GMT, so there's a time gap,
+		// where there's no "today's" report just yet. in that case, latest will be a report from the day before.
+
+		report, err := rg.GetByDate(c.Request().Context(), todaysDate) // TODO use multi err??
+		if err == nil {
+			c.JSONPretty(http.StatusOK, report, "  ")
+
+			return nil
 		}
+		errors = multierr.Append(errors, err)
 
-		c.JSONPretty(http.StatusOK, report, "  ")
+		report, err = rg.GetByDate(c.Request().Context(), yesterdaysDate)
+		if err == nil {
+			c.JSONPretty(http.StatusOK, report, "  ")
 
-		return nil
+			return nil
+		}
+		errors = multierr.Append(errors, err)
+
+		log.Error().Err(err).Msg("rest.GetLatest failed to get report")
+		return errors
 	}
 }
 
