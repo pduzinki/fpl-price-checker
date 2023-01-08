@@ -19,6 +19,9 @@ type ReportGetter interface {
 func NewServer(rg ReportGetter) *echo.Echo {
 	e := echo.New()
 
+	e.GET("/", func(c echo.Context) error {
+		return c.Redirect(http.StatusFound, "/latest")
+	})
 	e.GET("/latest", GetLatest(rg))
 	e.GET("/:date", GetByDate(rg))
 
