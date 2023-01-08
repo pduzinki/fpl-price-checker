@@ -1,6 +1,7 @@
 package fpc
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -16,8 +17,8 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+func Execute(ctx context.Context) {
+	if err := rootCmd.ExecuteContext(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "an error occurred: %s'\n", err)
 		os.Exit(1)
 	}

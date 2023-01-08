@@ -12,12 +12,14 @@ var fetchCmd = &cobra.Command{
 	Aliases: []string{"fetch"},
 	Short:   "fetches current player prices data from FPL API",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+
 		fetchService, err := di.NewFetchService()
 		if err != nil {
 			return fmt.Errorf("fetch-fpl-data cmd failed: %w", err)
 		}
 
-		err = fetchService.Fetch()
+		err = fetchService.Fetch(ctx)
 		if err != nil {
 			return fmt.Errorf("fetch-fpl-data cmd failed: %w", err)
 		}
