@@ -12,12 +12,14 @@ var generateCmd = &cobra.Command{
 	Aliases: []string{"gen"},
 	Short:   "generates today's price changes report", // TODO later it should be possible to generate report for a date provided by the user
 	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+
 		gs, err := di.NewGenerateService()
 		if err != nil {
 			return fmt.Errorf("generate-report cmd failed: %w", err)
 		}
 
-		err = gs.GeneratePriceReport()
+		err = gs.GeneratePriceReport(ctx)
 		if err != nil {
 			return fmt.Errorf("generate-report cmd failed: %w", err)
 		}

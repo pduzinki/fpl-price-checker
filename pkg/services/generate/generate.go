@@ -28,16 +28,16 @@ func NewGenerateService(sg StorageGetter, ra ReportAdder) *GenerateService {
 	}
 }
 
-func (gs *GenerateService) GeneratePriceReport() error {
+func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 	todaysDate := time.Now().Format(domain.DateFormat)
 	yesterdaysDate := time.Now().Add(-24 * time.Hour).Format(domain.DateFormat)
 
-	yesterdayPlayers, err := gs.sg.GetByDate(context.TODO(), yesterdaysDate)
+	yesterdayPlayers, err := gs.sg.GetByDate(ctx, yesterdaysDate)
 	if err != nil {
 		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get yesterday's players data: %w", err)
 	}
 
-	todayPlayers, err := gs.sg.GetByDate(context.TODO(), todaysDate)
+	todayPlayers, err := gs.sg.GetByDate(ctx, todaysDate)
 	if err != nil {
 		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get today's players data: %w", err)
 	}
@@ -76,7 +76,7 @@ func (gs *GenerateService) GeneratePriceReport() error {
 
 	report.Records = append(priceChangedPlayers, newPlayers...)
 
-	err = gs.ra.Add(context.TODO(), todaysDate, report)
+	err = gs.ra.Add(ctx, todaysDate, report)
 	if err != nil {
 		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to save report: %w", err)
 	}

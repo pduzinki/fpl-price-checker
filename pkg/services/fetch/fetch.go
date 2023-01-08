@@ -29,7 +29,7 @@ func NewFetchService(pg PlayersGetter, sa StorageAdder) *FetchService {
 	}
 }
 
-func (fs *FetchService) Fetch() error {
+func (fs *FetchService) Fetch(ctx context.Context) error {
 	players, err := fs.pg.GetPlayers()
 	if err != nil {
 		return fmt.Errorf("FetchService.Fetch, failed to get data from api: %w", err)
@@ -47,7 +47,7 @@ func (fs *FetchService) Fetch() error {
 
 	todaysDate := time.Now().Format(domain.DateFormat)
 
-	err = fs.sa.Add(context.TODO(), todaysDate, playersMap)
+	err = fs.sa.Add(ctx, todaysDate, playersMap)
 	if err != nil {
 		return fmt.Errorf("FetchService.Fetch, failed to save data in storage: %w", err)
 	}
