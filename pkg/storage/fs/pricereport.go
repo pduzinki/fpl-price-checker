@@ -12,6 +12,18 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/storage"
 )
 
+type Record struct {
+	Name        string
+	OldPrice    string
+	NewPrice    string
+	Description string
+}
+
+type PriceChangeReport struct {
+	Date    string
+	Records []Record
+}
+
 type PriceReportRepository struct {
 	folderPath string
 	sync.RWMutex
@@ -48,7 +60,9 @@ func (pr *PriceReportRepository) Add(_ context.Context, date string, report doma
 	}
 	defer f.Close()
 
-	jsonReport, err := json.Marshal(report)
+	fsReport := toFsReport(report)
+
+	jsonReport, err := json.Marshal(fsReport)
 	if err != nil {
 		return fmt.Errorf("fs.PriceReportRepository.Add failed to marshal data: %w", err)
 	}
@@ -77,9 +91,39 @@ func (pr *PriceReportRepository) GetByDate(_ context.Context, date string) (doma
 		return report, fmt.Errorf("fs.PriceReportRepository.GetByDate, failed to read file: %w", err)
 	}
 
-	if err := json.Unmarshal(data, &report); err != nil {
+	var fsReport PriceChangeReport
+
+	if err := json.Unmarshal(data, &fsReport); err != nil {
 		return report, fmt.Errorf("fs.PriceReportRepository.GetByDate, failed to unmarshal data: %w", err)
 	}
 
+	report = toDomainReport(fsReport)
+
 	return report, nil
+}
+
+func toFsReport(report domain.PriceChangeReport) PriceChangeReport {
+	records := make([]Record, 0, len(report.Records))
+
+	for _, r := range report.Records {
+		records = append(records, Record(r))
+	}
+
+	return PriceChangeReport{
+		Date:    report.Date,
+		Records: records,
+	}
+}
+
+func toDomainReport(report PriceChangeReport) domain.PriceChangeReport {
+	records := make([]domain.Record, 0, len(report.Records))
+
+	for _, r := range report.Records {
+		records = append(records, domain.Record(r))
+	}
+
+	return domain.PriceChangeReport{
+		Date:    report.Date,
+		Records: records,
+	}
 }
