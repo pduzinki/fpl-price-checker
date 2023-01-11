@@ -13,6 +13,15 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/storage"
 )
 
+type Player struct {
+	ID         int
+	Name       string
+	Price      int
+	SelectedBy string
+}
+
+type DailyPlayersData map[int]Player
+
 type DailyPlayersDataRepository struct {
 	folderPath string
 	sync.RWMutex
@@ -29,7 +38,7 @@ func NewDailyPlayersDataRepository(folderPath string) (*DailyPlayersDataReposito
 	}, nil
 }
 
-func (dr *DailyPlayersDataRepository) Add(_ context.Context, date string, players map[int]domain.Player) error {
+func (dr *DailyPlayersDataRepository) Add(_ context.Context, date string, players domain.DailyPlayersData) error {
 	dr.Lock()
 	defer dr.Unlock()
 
@@ -47,7 +56,9 @@ func (dr *DailyPlayersDataRepository) Add(_ context.Context, date string, player
 	}
 	defer f.Close()
 
-	jsonPlayers, err := json.Marshal(players)
+	fsPlayers := toFsDailyPlayersData(players)
+
+	jsonPlayers, err := json.Marshal(fsPlayers)
 	if err != nil {
 		return fmt.Errorf("fs.Add, failed to marshal data: %w", err)
 	}
@@ -59,14 +70,14 @@ func (dr *DailyPlayersDataRepository) Add(_ context.Context, date string, player
 	return nil
 }
 
-func (dr *DailyPlayersDataRepository) Update(_ context.Context, date string, players map[int]domain.Player) error {
+func (dr *DailyPlayersDataRepository) Update(_ context.Context, date string, players domain.DailyPlayersData) error {
 	dr.Lock()
 	defer dr.Unlock()
 
 	return errors.New("unimplemented")
 }
 
-func (dr *DailyPlayersDataRepository) GetByDate(_ context.Context, date string) (map[int]domain.Player, error) {
+func (dr *DailyPlayersDataRepository) GetByDate(_ context.Context, date string) (domain.DailyPlayersData, error) {
 	dr.RLock()
 	defer dr.RUnlock()
 
@@ -81,11 +92,31 @@ func (dr *DailyPlayersDataRepository) GetByDate(_ context.Context, date string) 
 		return nil, fmt.Errorf("fs.GetByDate, failed to read file: %w", err)
 	}
 
-	players := make(map[int]domain.Player, 0)
+	fsPlayers := make(DailyPlayersData, 0)
 
-	if err := json.Unmarshal(data, &players); err != nil {
+	if err := json.Unmarshal(data, &fsPlayers); err != nil {
 		return nil, fmt.Errorf("fs.GetByDate, failed to unmarshal data: %w", err)
 	}
 
-	return players, nil
+	return toDomainDailyPlayersData(fsPlayers), nil
+}
+
+func toDomainDailyPlayersData(data DailyPlayersData) domain.DailyPlayersData {
+	domainDailyPlayersData := make(domain.DailyPlayersData)
+
+	for k, v := range data {
+		domainDailyPlayersData[k] = domain.Player(v)
+	}
+
+	return domainDailyPlayersData
+}
+
+func toFsDailyPlayersData(data domain.DailyPlayersData) DailyPlayersData {
+	fsDailyPlayersData := make(DailyPlayersData)
+
+	for k, v := range data {
+		fsDailyPlayersData[k] = Player(v)
+	}
+
+	return DailyPlayersData{}
 }
