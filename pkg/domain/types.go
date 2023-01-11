@@ -11,6 +11,8 @@ type Player struct {
 	SelectedBy string
 }
 
+type DailyPlayersData map[int]Player
+
 type Record struct {
 	Name        string
 	OldPrice    string

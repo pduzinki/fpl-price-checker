@@ -14,7 +14,7 @@ type PlayersGetter interface {
 }
 
 type StorageAdder interface {
-	Add(ctx context.Context, date string, players map[int]domain.Player) error
+	Add(ctx context.Context, date string, players domain.DailyPlayersData) error
 }
 
 type FetchService struct {

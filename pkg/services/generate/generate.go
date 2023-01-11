@@ -9,7 +9,7 @@ import (
 )
 
 type StorageGetter interface {
-	GetByDate(ctx context.Context, date string) (map[int]domain.Player, error)
+	GetByDate(ctx context.Context, date string) (domain.DailyPlayersData, error)
 }
 
 type ReportAdder interface {
