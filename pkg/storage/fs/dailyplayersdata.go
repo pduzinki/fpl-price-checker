@@ -118,5 +118,5 @@ func toFsDailyPlayersData(data domain.DailyPlayersData) DailyPlayersData {
 		fsDailyPlayersData[k] = Player(v)
 	}
 
-	return DailyPlayersData{}
+	return fsDailyPlayersData
 }
