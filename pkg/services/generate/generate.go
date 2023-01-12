@@ -8,22 +8,22 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
 )
 
-type StorageGetter interface {
+type DailyPlayersDataGetter interface {
 	GetByDate(ctx context.Context, date string) (domain.DailyPlayersData, error)
 }
 
-type ReportAdder interface {
+type PriceChangeReportAdder interface {
 	Add(ctx context.Context, date string, report domain.PriceChangeReport) error
 }
 
 type GenerateService struct {
-	sg StorageGetter // TODO find a better name
-	ra ReportAdder   // TODO find a better name
+	dg DailyPlayersDataGetter
+	ra PriceChangeReportAdder
 }
 
-func NewGenerateService(sg StorageGetter, ra ReportAdder) *GenerateService {
+func NewGenerateService(sg DailyPlayersDataGetter, ra PriceChangeReportAdder) *GenerateService {
 	return &GenerateService{
-		sg: sg,
+		dg: sg,
 		ra: ra,
 	}
 }
@@ -32,12 +32,12 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 	todaysDate := time.Now().Format(domain.DateFormat)
 	yesterdaysDate := time.Now().Add(-24 * time.Hour).Format(domain.DateFormat)
 
-	yesterdayPlayers, err := gs.sg.GetByDate(ctx, yesterdaysDate)
+	yesterdayPlayers, err := gs.dg.GetByDate(ctx, yesterdaysDate)
 	if err != nil {
 		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get yesterday's players data: %w", err)
 	}
 
-	todayPlayers, err := gs.sg.GetByDate(ctx, todaysDate)
+	todayPlayers, err := gs.dg.GetByDate(ctx, todaysDate)
 	if err != nil {
 		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get today's players data: %w", err)
 	}
