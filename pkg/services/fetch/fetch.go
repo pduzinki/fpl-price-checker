@@ -13,19 +13,19 @@ type PlayersGetter interface {
 	GetPlayers() ([]wrapper.Player, error)
 }
 
-type StorageAdder interface {
+type DailyPlayersDataAdder interface {
 	Add(ctx context.Context, date string, players domain.DailyPlayersData) error
 }
 
 type FetchService struct {
-	pg PlayersGetter // TODO find a better name for this interface
-	sa StorageAdder  // TODO find a better name for this interface
+	pg PlayersGetter
+	da DailyPlayersDataAdder
 }
 
-func NewFetchService(pg PlayersGetter, sa StorageAdder) *FetchService {
+func NewFetchService(pg PlayersGetter, sa DailyPlayersDataAdder) *FetchService {
 	return &FetchService{
 		pg: pg,
-		sa: sa,
+		da: sa,
 	}
 }
 
@@ -35,7 +35,7 @@ func (fs *FetchService) Fetch(ctx context.Context) error {
 		return fmt.Errorf("FetchService.Fetch, failed to get data from api: %w", err)
 	}
 
-	playersMap := make(map[int]domain.Player)
+	playersMap := make(domain.DailyPlayersData)
 
 	for _, p := range players {
 		p, err := toDomainPlayer(&p)
@@ -47,7 +47,7 @@ func (fs *FetchService) Fetch(ctx context.Context) error {
 
 	todaysDate := time.Now().Format(domain.DateFormat)
 
-	err = fs.sa.Add(ctx, todaysDate, playersMap)
+	err = fs.da.Add(ctx, todaysDate, playersMap)
 	if err != nil {
 		return fmt.Errorf("FetchService.Fetch, failed to save data in storage: %w", err)
 	}
