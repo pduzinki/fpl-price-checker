@@ -14,12 +14,9 @@ var fetchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 
-		fetchService, err := di.NewFetchService()
-		if err != nil {
-			return fmt.Errorf("fetch-fpl-data cmd failed: %w", err)
-		}
+		fetchService := di.NewFetchService()
 
-		err = fetchService.Fetch(ctx)
+		err := fetchService.Fetch(ctx)
 		if err != nil {
 			return fmt.Errorf("fetch-fpl-data cmd failed: %w", err)
 		}
