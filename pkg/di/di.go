@@ -33,19 +33,19 @@ func NewPriceReportRepository() *fs.PriceReportRepository {
 	return rr
 }
 
-func NewFetchService() (*fetch.FetchService, error) {
+func NewFetchService() *fetch.FetchService {
 	wr := Wrapper()
 	dr := DailyPlayersDataRepository()
 
-	return fetch.NewFetchService(wr, dr), nil
+	return fetch.NewFetchService(wr, dr)
 
 }
 
-func NewGenerateService() (*generate.GenerateService, error) {
+func NewGenerateService() *generate.GenerateService {
 	pr := DailyPlayersDataRepository()
 	rr := NewPriceReportRepository()
 
-	return generate.NewGenerateService(pr, rr), nil
+	return generate.NewGenerateService(pr, rr)
 }
 
 func NewServer() *echo.Echo {
