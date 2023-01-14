@@ -32,7 +32,7 @@ type PriceReportRepository struct {
 func NewPriceReportRepository(folderPath string) (*PriceReportRepository, error) {
 	err := os.MkdirAll(folderPath, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create price report data repository: %w", err)
+		return nil, fmt.Errorf("fs.NewPriceReportRepository failed: %w", err)
 	}
 
 	return &PriceReportRepository{
