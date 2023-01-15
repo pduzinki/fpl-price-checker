@@ -4,6 +4,7 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/rest"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/fetch"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/generate"
+	"github.com/pduzinki/fpl-price-checker/pkg/services/get"
 	"github.com/pduzinki/fpl-price-checker/pkg/storage/fs"
 	"github.com/pduzinki/fpl-price-checker/pkg/wrapper"
 
@@ -48,10 +49,16 @@ func NewGenerateService() *generate.GenerateService {
 	return generate.NewGenerateService(pr, rr)
 }
 
-func NewServer() *echo.Echo {
+func NewGetService() *get.GetService {
 	rr := NewPriceReportRepository()
 
-	s := rest.NewServer(rr)
+	return get.NewGetService(rr)
+}
+
+func NewServer() *echo.Echo {
+	gs := NewGetService()
+
+	s := rest.NewServer(gs)
 
 	return s
 }
