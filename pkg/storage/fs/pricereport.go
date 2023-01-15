@@ -3,6 +3,7 @@ package fs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -83,6 +84,10 @@ func (pr *PriceReportRepository) GetByDate(_ context.Context, date string) (doma
 	filename := filepath.Join(pr.folderPath, date)
 
 	if _, err := os.Stat(filename); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			err = storage.ErrDataNotFound
+		}
+
 		return report, fmt.Errorf("fs.PriceReportRepository.GetByDate, failed to fetch file info: %w", err)
 	}
 
