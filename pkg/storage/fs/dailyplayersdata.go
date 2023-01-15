@@ -86,6 +86,10 @@ func (dr *DailyPlayersDataRepository) GetByDate(_ context.Context, date string) 
 	filename := filepath.Join(dr.folderPath, date)
 
 	if _, err := os.Stat(filename); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			err = storage.ErrDataNotFound
+		}
+
 		return nil, fmt.Errorf("fs.DailyPlayersDataRepository.GetByDate, failed to fetch file info: %w", err)
 	}
 

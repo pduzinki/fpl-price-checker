@@ -2,30 +2,97 @@ package fs
 
 import (
 	"context"
-	"fmt"
+	"os"
 	"testing"
 
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/pkg/storage"
+	"github.com/stretchr/testify/suite"
 )
 
-// TODO add later
-
-var testPlayers = domain.DailyPlayersData{
-	1: {ID: 1, Name: "Kane", Price: 120, SelectedBy: "12"},
-	2: {ID: 2, Name: "Salah", Price: 130, SelectedBy: "22"},
-	3: {ID: 3, Name: "Haaland", Price: 125, SelectedBy: "80"},
+type DailyPlayersDataRepositoryTestSuite struct {
+	suite.Suite
+	folderPath string
+	repo       *DailyPlayersDataRepository
 }
 
-func TestFoo(t *testing.T) {
+func (suite *DailyPlayersDataRepositoryTestSuite) SetupSuite() {
+	suite.folderPath = "./tmp_daily_players_data_test_data/"
+
+	err := os.MkdirAll(suite.folderPath, 0755)
+	suite.NoError(err)
+
+	repo, err := NewDailyPlayersDataRepository(suite.folderPath)
+	suite.NoError(err)
+
+	suite.repo = repo
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TearDownSuite() {
+	err := os.RemoveAll(suite.folderPath)
+	suite.NoError(err)
+}
+
+func TestDailyPlayersDataRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(DailyPlayersDataRepositoryTestSuite))
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataAddAndGetByDate() {
 	ctx := context.Background()
 
-	repo, _ := NewDailyPlayersDataRepository("./data")
+	date := "1999-06-24"
+	players := domain.DailyPlayersData{
+		1: domain.Player{
+			ID:         1,
+			Name:       "Haaland",
+			Price:      132,
+			SelectedBy: "84.3",
+		},
+	}
 
-	repo.Add(ctx, "2022-01-01", testPlayers)
+	err := suite.repo.Add(ctx, date, players)
+	suite.NoError(err)
 
-	players, err := repo.GetByDate(ctx, "2022-01-01")
+	gotPlayers, err := suite.repo.GetByDate(ctx, date)
+	suite.NoError(err)
+	suite.EqualValues(players, gotPlayers)
+}
 
-	fmt.Println(err)
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataAddDuplicate() {
+	ctx := context.Background()
 
-	fmt.Println(players)
+	date := "1999-06-25"
+	players := make(domain.DailyPlayersData)
+
+	err := suite.repo.Add(ctx, date, players)
+	suite.NoError(err)
+
+	err = suite.repo.Add(ctx, date, players)
+	suite.ErrorIs(err, storage.ErrDataAlreadyExists)
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataGetNonExistentEntry() {
+	ctx := context.Background()
+
+	date := "1999-06-26"
+	players, err := suite.repo.GetByDate(ctx, date)
+	suite.ErrorIs(err, storage.ErrDataNotFound)
+	suite.Nil(players)
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataAddWithIncorrectlyFormattedDate() {
+	ctx := context.Background()
+
+	date := "not-a-date"
+	players := domain.DailyPlayersData{
+		1: domain.Player{
+			ID:         1,
+			Name:       "Haaland",
+			Price:      132,
+			SelectedBy: "84.3",
+		},
+	}
+
+	err := suite.repo.Add(ctx, date, players)
+	suite.Error(err)
 }
