@@ -10,15 +10,11 @@ import (
 )
 
 type ReportGetter interface {
-	GetByDate(ctx context.Context, date string) (domain.PriceChangeReport, error)
-}
-
-type Tmp interface {
 	GetLatestReport(ctx context.Context) (domain.PriceChangeReport, error)
 	GetReportByDate(ctx context.Context, date string) (domain.PriceChangeReport, error)
 }
 
-func NewServer(rg Tmp) *echo.Echo {
+func NewServer(rg ReportGetter) *echo.Echo {
 	e := echo.New()
 
 	e.GET("/", func(c echo.Context) error {
@@ -30,7 +26,7 @@ func NewServer(rg Tmp) *echo.Echo {
 	return e
 }
 
-func GetLatest(rs Tmp) func(c echo.Context) error {
+func GetLatest(rs ReportGetter) func(c echo.Context) error {
 	return func(c echo.Context) error {
 
 		report, err := rs.GetLatestReport(c.Request().Context())
@@ -46,7 +42,7 @@ func GetLatest(rs Tmp) func(c echo.Context) error {
 	}
 }
 
-func GetByDate(rs Tmp) func(c echo.Context) error {
+func GetByDate(rs ReportGetter) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		date := c.Param("date")
 
