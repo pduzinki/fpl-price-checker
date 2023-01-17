@@ -1,6 +1,7 @@
 package fpc
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/pduzinki/fpl-price-checker/pkg/di"
@@ -21,7 +22,12 @@ var getReportCmd = &cobra.Command{
 			return fmt.Errorf("get-report cmd failed: %w", err)
 		}
 
-		fmt.Println(report) // TODO fix readability
+		jsonReport, err := json.MarshalIndent(report, "", "  ")
+		if err != nil {
+			return fmt.Errorf("get-report cmd failed: %w", err)
+		}
+
+		fmt.Println(string(jsonReport))
 
 		fmt.Println("get-report cmd finished")
 		return nil

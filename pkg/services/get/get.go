@@ -2,6 +2,7 @@ package get
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
@@ -44,7 +45,7 @@ func (gs *GetService) GetLatestReport(ctx context.Context) (domain.PriceChangeRe
 	}
 	errors = multierr.Append(errors, err)
 
-	return domain.PriceChangeReport{}, errors
+	return domain.PriceChangeReport{}, fmt.Errorf("get.GetService.GetLatestReport failed: %w", errors)
 }
 
 func (gs *GetService) GetReportByDate(ctx context.Context, date string) (domain.PriceChangeReport, error) {
@@ -54,7 +55,7 @@ func (gs *GetService) GetReportByDate(ctx context.Context, date string) (domain.
 
 	report, err := gs.rg.GetByDate(ctx, date)
 	if err != nil {
-		return domain.PriceChangeReport{}, err
+		return domain.PriceChangeReport{}, fmt.Errorf("get.GetService.GetReportByDate failed: %w", err)
 	}
 
 	return report, nil
