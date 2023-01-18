@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	anError = fmt.Errorf("an error")
+	errPlayerGetterFailure = fmt.Errorf("player getter failure")
+	errDataAdderFailure    = fmt.Errorf("data adder failure")
 
 	PlayersGetterOk = PlayersGetterMock{
 		GetPlayersFunc: func() ([]wrapper.Player, error) {
@@ -34,7 +35,7 @@ var (
 
 	PlayersGetterFailing = PlayersGetterMock{
 		GetPlayersFunc: func() ([]wrapper.Player, error) {
-			return nil, anError
+			return nil, errPlayerGetterFailure
 		},
 	}
 
@@ -45,7 +46,7 @@ var (
 	}
 	DailyPlayersDataAdderFailing = DailyPlayersDataAdderMock{
 		AddFunc: func(ctx context.Context, date string, players domain.DailyPlayersData) error {
-			return anError
+			return errDataAdderFailure
 		},
 	}
 )
@@ -67,13 +68,13 @@ func TestFetch(t *testing.T) {
 			name:    "PlayersGetter failure",
 			pg:      &PlayersGetterFailing,
 			da:      &DailyPlayersDataAdderOk,
-			wantErr: anError,
+			wantErr: errPlayerGetterFailure,
 		},
 		{
 			name:    "DailyPlayersDataAdder failure",
 			pg:      &PlayersGetterOk,
 			da:      &DailyPlayersDataAdderFailing,
-			wantErr: anError,
+			wantErr: errDataAdderFailure,
 		},
 	}
 
