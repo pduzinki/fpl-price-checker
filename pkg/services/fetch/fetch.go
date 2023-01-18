@@ -9,6 +9,8 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/wrapper"
 )
 
+//go:generate moq -out fetch_moq_test.go . PlayersGetter DailyPlayersDataAdder
+
 type PlayersGetter interface {
 	GetPlayers() ([]wrapper.Player, error)
 }
@@ -38,10 +40,7 @@ func (fs *FetchService) Fetch(ctx context.Context) error {
 	playersMap := make(domain.DailyPlayersData)
 
 	for _, p := range players {
-		p, err := toDomainPlayer(&p)
-		if err != nil {
-			return fmt.Errorf("fetch.Fetch failed to convert player value: %w", err)
-		}
+		p := toDomainPlayer(&p)
 		playersMap[p.ID] = p
 	}
 
@@ -55,16 +54,11 @@ func (fs *FetchService) Fetch(ctx context.Context) error {
 	return nil
 }
 
-func toDomainPlayer(wp *wrapper.Player) (domain.Player, error) {
-	// selectedBy, err := strconv.ParseFloat(wp.SelectedBy, 32)
-	// if err != nil {
-	// 	return domain.Player{}, fmt.Errorf("fetch.toDomainPlayer failed to parse float value: %w", err)
-	// }
-
+func toDomainPlayer(wp *wrapper.Player) domain.Player {
 	return domain.Player{
 		ID:         wp.ID,
 		Name:       wp.WebName,
 		Price:      wp.Price,
 		SelectedBy: wp.SelectedBy,
-	}, nil
+	}
 }
