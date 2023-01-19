@@ -1,11 +1,11 @@
 package fpc
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/pduzinki/fpl-price-checker/pkg/di"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var getReportCmd = &cobra.Command{
@@ -22,12 +22,12 @@ var getReportCmd = &cobra.Command{
 			return fmt.Errorf("get-report cmd failed: %w", err)
 		}
 
-		jsonReport, err := json.MarshalIndent(report, "", "  ")
+		yamlReport, err := yaml.Marshal(report)
 		if err != nil {
 			return fmt.Errorf("get-report cmd failed: %w", err)
 		}
 
-		fmt.Println(string(jsonReport))
+		fmt.Println(string(yamlReport))
 
 		fmt.Println("get-report cmd finished")
 		return nil

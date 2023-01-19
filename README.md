@@ -28,6 +28,9 @@ go test ./...
 # to succeed, it needs two data points for comparison (i.e. FPL players data from the day before, and the day you run the command)
 ./fpc generate-report
 
+# prints latest price changes report
+./fpc get-report
+
 # starts simple web server, with endpoints to get price changes report:
 # /latest returns last generated report
 # /:date returns report generated for given date (date format required "2006-01-02")
