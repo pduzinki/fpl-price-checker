@@ -56,7 +56,7 @@ func TestFetchData(t *testing.T) {
 
 		err := w.fetchData(w.baseURL, &data)
 		if !errors.Is(err, test.wantErr) {
-			t.Errorf("want: %d, got: %d", test.wantErr, err)
+			t.Errorf("want: %v, got: %v", test.wantErr, err)
 		}
 	}
 }
