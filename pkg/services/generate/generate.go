@@ -8,6 +8,8 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
 )
 
+//go:generate moq -out generate_moq_test.go . DailyPlayersDataGetter PriceChangeReportAdder
+
 type DailyPlayersDataGetter interface {
 	GetByDate(ctx context.Context, date string) (domain.DailyPlayersData, error)
 }
@@ -44,9 +46,18 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 
 	report := domain.PriceChangeReport{
 		Date:    todaysDate,
-		Records: make([]domain.Record, 0),
+		Records: generateRecords(yesterdayPlayers, todayPlayers),
 	}
 
+	err = gs.ra.Add(ctx, todaysDate, report)
+	if err != nil {
+		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to save report: %w", err)
+	}
+
+	return nil
+}
+
+func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData) []domain.Record {
 	priceChangedPlayers := make([]domain.Record, 0)
 	newPlayers := make([]domain.Record, 0)
 
@@ -74,14 +85,9 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 		}
 	}
 
-	report.Records = append(priceChangedPlayers, newPlayers...)
+	priceChangedPlayers = append(priceChangedPlayers, newPlayers...)
 
-	err = gs.ra.Add(ctx, todaysDate, report)
-	if err != nil {
-		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to save report: %w", err)
-	}
-
-	return nil
+	return priceChangedPlayers
 }
 
 func addDescription(oldPrice, newPrice int) string {

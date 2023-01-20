@@ -87,7 +87,7 @@ func TestFetch(t *testing.T) {
 
 			err := f.Fetch(ctx)
 			if !errors.Is(err, test.wantErr) {
-				t.Errorf("want: %d, got: %d", test.wantErr, err)
+				t.Errorf("want: %v, got: %v", test.wantErr, err)
 			}
 		})
 	}
