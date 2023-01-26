@@ -2,4 +2,5 @@ TODO
 /app
 /fpc
 /data
+/volume
 pkg/storage/fs/data/*
