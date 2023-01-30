@@ -27,7 +27,7 @@ func TestFoo(t *testing.T) {
 	ctx := context.Background()
 	cfg, _ := config.NewConfig()
 
-	pr, err := NewPriceReportRepository(cfg.AWS)
+	pr, err := NewPriceReportRepository(cfg.AWS, "reports")
 	if err != nil {
 		fmt.Println(err)
 		t.Error(err)
