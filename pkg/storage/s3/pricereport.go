@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 
 	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
@@ -32,9 +33,10 @@ type PriceReportRepository struct {
 	Uploader   *s3manager.Uploader
 	Downloader *s3manager.Downloader
 	Bucket     string
+	prefix     string
 }
 
-func NewPriceReportRepository(awsConfig config.AWSConfig) (*PriceReportRepository, error) {
+func NewPriceReportRepository(awsConfig config.AWSConfig, prefix string) (*PriceReportRepository, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region:           &awsConfig.Region,
 		Credentials:      credentials.NewStaticCredentials(awsConfig.ID, awsConfig.Secret, awsConfig.Token),
@@ -49,6 +51,7 @@ func NewPriceReportRepository(awsConfig config.AWSConfig) (*PriceReportRepositor
 		Uploader:   s3manager.NewUploader(sess),
 		Downloader: s3manager.NewDownloader(sess),
 		Bucket:     awsConfig.Bucket,
+		prefix:     prefix,
 	}, nil
 }
 
@@ -62,7 +65,7 @@ func (pr *PriceReportRepository) Add(ctx context.Context, date string, report do
 
 	_, err = pr.Uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(pr.Bucket),
-		Key:    aws.String(date),
+		Key:    aws.String(filepath.Join(pr.prefix, date)),
 		Body:   bytes.NewReader(jsonReport),
 	})
 	if err != nil {
@@ -77,7 +80,7 @@ func (pr *PriceReportRepository) GetByDate(ctx context.Context, date string) (do
 
 	_, err := pr.Downloader.DownloadWithContext(ctx, buf, &s3.GetObjectInput{
 		Bucket: &pr.Bucket,
-		Key:    aws.String(date),
+		Key:    aws.String(filepath.Join(pr.prefix, date)),
 	})
 	if err != nil {
 		return domain.PriceChangeReport{}, fmt.Errorf("s3.PriceReportRepository.GetByDate failed to download from s3: %w", err)
