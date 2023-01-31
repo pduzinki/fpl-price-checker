@@ -33,7 +33,7 @@ type PriceReportRepository struct {
 	Uploader   *s3manager.Uploader
 	Downloader *s3manager.Downloader
 	Bucket     string
-	prefix     string
+	Prefix     string
 }
 
 func NewPriceReportRepository(awsConfig config.AWSConfig, prefix string) (*PriceReportRepository, error) {
@@ -51,7 +51,7 @@ func NewPriceReportRepository(awsConfig config.AWSConfig, prefix string) (*Price
 		Uploader:   s3manager.NewUploader(sess),
 		Downloader: s3manager.NewDownloader(sess),
 		Bucket:     awsConfig.Bucket,
-		prefix:     prefix,
+		Prefix:     prefix,
 	}, nil
 }
 
@@ -65,7 +65,7 @@ func (pr *PriceReportRepository) Add(ctx context.Context, date string, report do
 
 	_, err = pr.Uploader.UploadWithContext(ctx, &s3manager.UploadInput{
 		Bucket: aws.String(pr.Bucket),
-		Key:    aws.String(filepath.Join(pr.prefix, date)),
+		Key:    aws.String(filepath.Join(pr.Prefix, date)),
 		Body:   bytes.NewReader(jsonReport),
 	})
 	if err != nil {
@@ -80,7 +80,7 @@ func (pr *PriceReportRepository) GetByDate(ctx context.Context, date string) (do
 
 	_, err := pr.Downloader.DownloadWithContext(ctx, buf, &s3.GetObjectInput{
 		Bucket: &pr.Bucket,
-		Key:    aws.String(filepath.Join(pr.prefix, date)),
+		Key:    aws.String(filepath.Join(pr.Prefix, date)),
 	})
 	if err != nil {
 		return domain.PriceChangeReport{}, fmt.Errorf("s3.PriceReportRepository.GetByDate failed to download from s3: %w", err)
