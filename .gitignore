@@ -4,3 +4,4 @@ TODO
 /data
 /volume
 pkg/storage/fs/data/*
+.env

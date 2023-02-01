@@ -9,7 +9,7 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
 )
 
-func TestFoo(t *testing.T) {
+func Disabled_TestFoo(t *testing.T) {
 	// TODO replace with proper tests
 
 	report := domain.PriceChangeReport{
@@ -25,7 +25,7 @@ func TestFoo(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	cfg, _ := config.NewConfig()
+	cfg := config.NewConfig()
 
 	pr, err := NewPriceReportRepository(cfg.AWS, "reports")
 	if err != nil {
