@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/pduzinki/fpl-price-checker/cmd/fpc"
+	"github.com/pduzinki/fpl-price-checker/cmd/cli/fpc"
 )
 
 func main() {
