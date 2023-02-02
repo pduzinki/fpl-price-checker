@@ -25,7 +25,7 @@ func Build() error {
 		"GOOS":   runtime.GOOS,
 		"GOARCH": runtime.GOARCH,
 	}
-	_, err := sh.Exec(env, os.Stdout, os.Stderr, "go", "build", "-v", "-ldflags="+"-w -s", "-o", "fpc", "./cmd")
+	_, err := sh.Exec(env, os.Stdout, os.Stderr, "go", "build", "-v", "-ldflags="+"-w -s", "-o", "fpc", "./cmd/cli")
 
 	return err
 }
