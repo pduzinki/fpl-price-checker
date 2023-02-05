@@ -3,5 +3,6 @@ TODO
 /fpc
 /data
 /volume
+/build
 pkg/storage/fs/data/*
 .env
