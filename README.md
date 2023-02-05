@@ -8,10 +8,10 @@
 ## Building
 ```sh
 #with mage
-mage build
+mage cli
 
 #with go build
-go build -o fpc ./cmd
+go build -o fpc ./cmd/cli
 ```
 
 ## Testing

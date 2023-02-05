@@ -25,7 +25,7 @@ func Config() *config.Config {
 }
 
 func DailyPlayersDataFsRepository() *fs.DailyPlayersDataRepository {
-	dr, err := fs.NewDailyPlayersDataRepository("./data/players/")
+	dr, err := fs.NewDailyPlayersDataRepository("./../../data/players/") // TODO this is temporary, fix this
 	if err != nil {
 		log.Fatal().Err(err).Msg("di.DailyPlayersDataFsRepository failed")
 	}
@@ -45,7 +45,7 @@ func DailyPlayersDataS3Repository() *s3.DailyPlayersDataRepository {
 }
 
 func NewPriceReportFsRepository() *fs.PriceReportRepository {
-	rr, err := fs.NewPriceReportRepository("./data/reports/")
+	rr, err := fs.NewPriceReportRepository("./../../data/reports/") // TODO this is temporary, fix this
 	if err != nil {
 		log.Fatal().Err(err).Msg("di.NewPriceReportFsRepository failed")
 	}
