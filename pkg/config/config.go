@@ -18,7 +18,7 @@ type AWSConfig struct {
 	Bucket   string
 }
 
-func NewConfig() Config {
+func NewConfig() *Config {
 	viper.AutomaticEnv()
 
 	// NOTE: default values set for development with localstack
@@ -35,7 +35,7 @@ func NewConfig() Config {
 		log.Info().Err(err).Msg("config.Config failed to read file")
 	}
 
-	return Config{
+	return &Config{
 		AWS: AWSConfig{
 			Region:   viper.GetString("AWS_REGION"),
 			ID:       viper.GetString("AWS_ID"),

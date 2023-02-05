@@ -1,11 +1,13 @@
 package di
 
 import (
+	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/rest"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/fetch"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/generate"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/get"
 	"github.com/pduzinki/fpl-price-checker/pkg/storage/fs"
+	"github.com/pduzinki/fpl-price-checker/pkg/storage/s3"
 	"github.com/pduzinki/fpl-price-checker/pkg/wrapper"
 
 	"github.com/labstack/echo/v4"
@@ -16,19 +18,47 @@ func Wrapper() *wrapper.Wrapper {
 	return wrapper.NewWrapper()
 }
 
-func DailyPlayersDataRepository() *fs.DailyPlayersDataRepository {
+func Config() *config.Config {
+	cfg := config.NewConfig()
+
+	return cfg
+}
+
+func DailyPlayersDataFsRepository() *fs.DailyPlayersDataRepository {
 	dr, err := fs.NewDailyPlayersDataRepository("./data/players/")
 	if err != nil {
-		log.Fatal().Err(err).Msg("di.DailyPlayersDataRepository failed")
+		log.Fatal().Err(err).Msg("di.DailyPlayersDataFsRepository failed")
 	}
 
 	return dr
 }
 
-func NewPriceReportRepository() *fs.PriceReportRepository {
+func DailyPlayersDataS3Repository() *s3.DailyPlayersDataRepository {
+	cfg := Config()
+
+	dr, err := s3.NewDailyPlayersDataRepository(cfg.AWS, "players")
+	if err != nil {
+		log.Fatal().Err(err).Msg("di.DailyPlayersDataS3Repository failed")
+	}
+
+	return dr
+}
+
+func NewPriceReportFsRepository() *fs.PriceReportRepository {
 	rr, err := fs.NewPriceReportRepository("./data/reports/")
 	if err != nil {
-		log.Fatal().Err(err).Msg("di.NewPriceReportRepository failed")
+		log.Fatal().Err(err).Msg("di.NewPriceReportFsRepository failed")
+	}
+
+	return rr
+}
+
+// TODO DRY: merge fs and s3 service constructors
+
+func NewPriceReportS3Repository() *fs.PriceReportRepository {
+	rr, err := fs.NewPriceReportRepository("reports")
+	if err != nil {
+		log.Fatal().Err(err).Msg("di.NewPriceReportS3Repository failed")
 	}
 
 	return rr
@@ -36,21 +66,41 @@ func NewPriceReportRepository() *fs.PriceReportRepository {
 
 func NewFetchService() *fetch.FetchService {
 	wr := Wrapper()
-	dr := DailyPlayersDataRepository()
+	dr := DailyPlayersDataFsRepository()
+
+	return fetch.NewFetchService(wr, dr)
+}
+
+func NewFetchServiceS3() *fetch.FetchService {
+	wr := Wrapper()
+	dr := DailyPlayersDataS3Repository()
 
 	return fetch.NewFetchService(wr, dr)
 
 }
 
 func NewGenerateService() *generate.GenerateService {
-	pr := DailyPlayersDataRepository()
-	rr := NewPriceReportRepository()
+	pr := DailyPlayersDataFsRepository()
+	rr := NewPriceReportFsRepository()
+
+	return generate.NewGenerateService(pr, rr)
+}
+
+func NewGenerateServiceS3() *generate.GenerateService {
+	pr := DailyPlayersDataFsRepository()
+	rr := NewPriceReportS3Repository()
 
 	return generate.NewGenerateService(pr, rr)
 }
 
 func NewGetService() *get.GetService {
-	rr := NewPriceReportRepository()
+	rr := NewPriceReportFsRepository()
+
+	return get.NewGetService(rr)
+}
+
+func NewGetServiceS3() *get.GetService {
+	rr := NewPriceReportS3Repository()
 
 	return get.NewGetService(rr)
 }
