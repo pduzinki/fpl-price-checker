@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/pduzinki/fpl-price-checker/pkg/di"
+
+	"github.com/aws/aws-lambda-go/lambda"
 )
 
 func main() {

@@ -1,6 +1,9 @@
 package di
 
 import (
+	"os/user"
+	"path/filepath"
+
 	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/rest"
 	"github.com/pduzinki/fpl-price-checker/pkg/services/fetch"
@@ -24,8 +27,17 @@ func Config() *config.Config {
 	return cfg
 }
 
+func fsDir() string {
+	user, err := user.Current()
+	if err != nil {
+		log.Fatal().Err(err).Msg("di.FsDir failed to get current os user")
+	}
+
+	return filepath.Join("/home", user.Username, "fpc", "data")
+}
+
 func DailyPlayersDataFsRepository() *fs.DailyPlayersDataRepository {
-	dr, err := fs.NewDailyPlayersDataRepository("./../../data/players/") // TODO this is temporary, fix this
+	dr, err := fs.NewDailyPlayersDataRepository(filepath.Join(fsDir(), "players"))
 	if err != nil {
 		log.Fatal().Err(err).Msg("di.DailyPlayersDataFsRepository failed")
 	}
@@ -45,7 +57,7 @@ func DailyPlayersDataS3Repository() *s3.DailyPlayersDataRepository {
 }
 
 func NewPriceReportFsRepository() *fs.PriceReportRepository {
-	rr, err := fs.NewPriceReportRepository("./../../data/reports/") // TODO this is temporary, fix this
+	rr, err := fs.NewPriceReportRepository(filepath.Join(fsDir(), "reports"))
 	if err != nil {
 		log.Fatal().Err(err).Msg("di.NewPriceReportFsRepository failed")
 	}
