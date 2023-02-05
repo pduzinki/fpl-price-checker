@@ -31,8 +31,9 @@ func Cli() error {
 	}
 
 	env := map[string]string{
-		"GOOS":   runtime.GOOS,
-		"GOARCH": runtime.GOARCH,
+		"GOOS":        runtime.GOOS,
+		"GOARCH":      runtime.GOARCH,
+		"CGO_ENABLED": "0",
 	}
 
 	cliBuildDst := filepath.Join(cliBuildDst, "fpc")
