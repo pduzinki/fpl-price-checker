@@ -27,7 +27,7 @@ func NewConfig() *Config {
 	viper.SetDefault("AWS_SECRET", "test")
 	viper.SetDefault("AWS_TOKEN", "")
 	viper.SetDefault("AWS_ENDPOINT", "http://localhost:4566")
-	viper.SetDefault("AWS_S3_BUCKET", "fpc-test-bucket")
+	viper.SetDefault("AWS_S3_BUCKET", "fpc-test-bucket-1")
 
 	viper.SetConfigFile(".env")
 
