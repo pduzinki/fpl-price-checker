@@ -1,5 +1,5 @@
 ## About
-*fpl-price-checker* is an app that can be used to process data from Fantasy Premier League API, and generate reports on daily player price changes. 
+*fpl-price-checker* is an app that processes data from Fantasy Premier League API, and generates daily player price changes reports. It can be used as a cli app, which saves data on *"/home/{current_user}/fpc"*, or as AWS Lambdas, which saves data on S3 Bucket specified with env variables, read by *config* package. For a succesful report generation for a given day, it needs players data from the previous day, and current day.
 
 ## Prerequisites
 * Go (1.19 or higher) https://golang.org/doc/install
@@ -7,11 +7,11 @@
 
 ## Building
 ```sh
-#with mage
+# for cli app
 mage cli
 
-#with go build
-go build -o fpc ./cmd/cli
+# for aws lambdas
+mage lambdas
 ```
 
 ## Testing
@@ -19,7 +19,7 @@ go build -o fpc ./cmd/cli
 go test ./...
 ```
 
-## Running
+## Running CLI
 ```sh
 # fetches and saves current data on players available in FPL
 ./fpc fetch-fpl-data
