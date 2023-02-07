@@ -67,8 +67,10 @@ func NewPriceReportFsRepository() *fs.PriceReportRepository {
 
 // TODO DRY: merge fs and s3 service constructors
 
-func NewPriceReportS3Repository() *fs.PriceReportRepository {
-	rr, err := fs.NewPriceReportRepository("reports")
+func NewPriceReportS3Repository() *s3.PriceReportRepository {
+	cfg := Config()
+
+	rr, err := s3.NewPriceReportRepository(cfg.AWS, "reports")
 	if err != nil {
 		log.Fatal().Err(err).Msg("di.NewPriceReportS3Repository failed")
 	}
@@ -99,7 +101,7 @@ func NewGenerateService() *generate.GenerateService {
 }
 
 func NewGenerateServiceS3() *generate.GenerateService {
-	pr := DailyPlayersDataFsRepository()
+	pr := DailyPlayersDataS3Repository()
 	rr := NewPriceReportS3Repository()
 
 	return generate.NewGenerateService(pr, rr)
