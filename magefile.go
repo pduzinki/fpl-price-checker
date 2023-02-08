@@ -95,3 +95,8 @@ func Lambdas() error {
 
 	return nil
 }
+
+func Test() error {
+	_, err := sh.Exec(nil, os.Stdout, os.Stderr, "go", "test", "./...", "-cover")
+	return err
+}
