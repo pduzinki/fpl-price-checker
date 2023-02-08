@@ -16,7 +16,7 @@ mage lambdas
 
 ## Testing
 ```sh
-go test ./...
+mage test
 ```
 
 ## Running CLI
