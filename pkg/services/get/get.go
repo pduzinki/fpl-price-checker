@@ -10,6 +10,8 @@ import (
 	"go.uber.org/multierr"
 )
 
+//go:generate moq -out get_moq_test.go . PriceChangeReportGetter
+
 type PriceChangeReportGetter interface {
 	GetByDate(ctx context.Context, date string) (domain.PriceChangeReport, error)
 }
