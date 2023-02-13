@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -108,20 +110,19 @@ func TestGetReportByDate(t *testing.T) {
 			want:    domain.PriceChangeReport{},
 			wantErr: errReportGetterFailure,
 		},
-		// TODO fix testcase below
-		// {
-		// 	name: "Wrong date format",
-		// 	rg:   &ReportGetterOk,
-		// 	date: "not-even-a-date",
-		// 	want: domain.PriceChangeReport{},
-		// 	wantErr: &time.ParseError{
-		// 		Layout:     domain.DateFormat,
-		// 		Value:      "not-even-a-date",
-		// 		LayoutElem: "2006",
-		// 		ValueElem:  "not-even-a-date",
-		// 		Message:    "",
-		// 	},
-		// },
+		{
+			name: "Wrong date format",
+			rg:   &ReportGetterOk,
+			date: "not-even-a-date",
+			want: domain.PriceChangeReport{},
+			wantErr: &time.ParseError{
+				Layout:     domain.DateFormat,
+				Value:      "not-even-a-date",
+				LayoutElem: "2006",
+				ValueElem:  "not-even-a-date",
+				Message:    "",
+			},
+		},
 	}
 
 	for _, test := range testcases {
@@ -136,7 +137,14 @@ func TestGetReportByDate(t *testing.T) {
 				t.Errorf("want: %v, got: %v", test.want, got)
 			}
 
-			if !errors.Is(gotErr, test.wantErr) {
+			if gotErr == nil {
+				if gotErr != test.wantErr {
+					t.Errorf("want: %v, got: %v", test.wantErr, gotErr)
+				}
+				return
+			}
+
+			if assert.Error(t, gotErr) && !assert.ErrorContains(t, gotErr, test.wantErr.Error()) {
 				t.Errorf("want: %v, got: %v", test.wantErr, gotErr)
 			}
 		})
