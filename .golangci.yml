@@ -1,0 +1,9 @@
+run:
+  concurrency: 2
+  fast: true
+
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+
