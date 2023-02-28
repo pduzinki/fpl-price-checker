@@ -18,7 +18,7 @@ type PriceReportRepositoryTestSuite struct {
 }
 
 func (suite *PriceReportRepositoryTestSuite) SetupSuite() {
-	l, err := localstack.NewInstance()
+	l, err := localstack.NewInstance(localstack.WithVersion("0.12.0"))
 	suite.NoError(err)
 
 	suite.l = l
