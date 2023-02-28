@@ -30,7 +30,7 @@ func (suite *PriceReportRepositoryTestSuite) SetupSuite() {
 		Region:   "eu-west-2",
 		ID:       "test",
 		Secret:   "test",
-		Endpoint: "localhost:4566",
+		Endpoint: "http://localhost:4566",
 		Bucket:   "test-bucket",
 	}
 
