@@ -26,7 +26,9 @@ func (suite *PriceReportRepositoryTestSuite) SetupSuite() {
 	err = suite.l.Start()
 	suite.NoError(err)
 
-	cfg := config.AWSConfig{}
+	cfg := config.AWSConfig{
+		Region: "eu-west-2",
+	}
 
 	repo, err := NewPriceReportRepository(cfg, "reports")
 	suite.NoError(err)
