@@ -21,8 +21,14 @@ jobs:
       with:
         go-version: 1.19
 
-#     - name: Build
-#       run: go build -v ./...
+    - name: Install Mage
+      run: go install github.com/magefile/mage@07afc7d24f4d6d6442305d49552f04fbda5ccb3e
+
+    - name: Build Lambdas
+      run: mage lambdas
+
+    - name: Build CLI
+      run: mage cli
 
     - name: Test
-      run: go test -v ./... -cover
+      run: mage test
