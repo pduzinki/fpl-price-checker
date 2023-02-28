@@ -27,8 +27,11 @@ func (suite *PriceReportRepositoryTestSuite) SetupSuite() {
 	suite.NoError(err)
 
 	cfg := config.AWSConfig{
-		Region: "eu-west-2",
-		Bucket: "test-bucket",
+		Region:   "eu-west-2",
+		ID:       "test",
+		Secret:   "test",
+		Endpoint: "localhost:4566",
+		Bucket:   "test-bucket",
 	}
 
 	repo, err := NewPriceReportRepository(cfg, "reports")

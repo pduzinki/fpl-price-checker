@@ -11,6 +11,7 @@ import (
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
@@ -37,10 +38,10 @@ type PriceReportRepository struct {
 
 func NewPriceReportRepository(awsConfig config.AWSConfig, prefix string) (*PriceReportRepository, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: &awsConfig.Region,
-		// Credentials:      credentials.NewStaticCredentials(awsConfig.ID, awsConfig.Secret, awsConfig.Token),
+		Region:           &awsConfig.Region,
+		Credentials:      credentials.NewStaticCredentials(awsConfig.ID, awsConfig.Secret, awsConfig.Token),
 		S3ForcePathStyle: aws.Bool(true),
-		// Endpoint:         &awsConfig.Endpoint, // TODO uncomment those later
+		Endpoint:         &awsConfig.Endpoint,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("s3.NewPriceReportRepository failed: %w", err)
