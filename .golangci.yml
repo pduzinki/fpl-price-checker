@@ -1,5 +1,4 @@
 run:
-  concurrency: 2
   fast: true
 
 linters:
