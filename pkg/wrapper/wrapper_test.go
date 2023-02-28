@@ -40,7 +40,10 @@ func TestFetchData(t *testing.T) {
 				t.Error(err)
 			}
 
-			w.Write(f)
+			_, err = w.Write(f)
+			if err != nil {
+				t.Error(err)
+			}
 		}))
 		defer server.Close()
 

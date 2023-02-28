@@ -12,7 +12,7 @@ var serverCmd = &cobra.Command{
 	Use:     "start-server",
 	Aliases: []string{"server"},
 	Short:   "starts fpc web server",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("fpc start-server command")
 
 		ctx := cmd.Context()
@@ -23,7 +23,11 @@ var serverCmd = &cobra.Command{
 			os.Exit(0)
 		}()
 
-		s.Start(":8080")
+		if err := s.Start(":8080"); err != nil {
+			return fmt.Errorf("start-server cmd failed: %w", err)
+		}
+
+		return nil
 	},
 }
 

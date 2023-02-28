@@ -36,7 +36,11 @@ func GetLatest(rs ReportGetter) func(c echo.Context) error {
 			return err
 		}
 
-		c.JSONPretty(http.StatusOK, report, "  ")
+		if err := c.JSONPretty(http.StatusOK, report, "  "); err != nil {
+			log.Error().Err(err).Msg("rest.GetLatest failed to send json")
+
+			return err
+		}
 
 		return nil
 	}
@@ -53,7 +57,11 @@ func GetByDate(rs ReportGetter) func(c echo.Context) error {
 			return err
 		}
 
-		c.JSONPretty(http.StatusOK, report, "  ")
+		if err := c.JSONPretty(http.StatusOK, report, "  "); err != nil {
+			log.Error().Err(err).Msg("rest.GetByDate failed to send json")
+
+			return err
+		}
 
 		return nil
 	}
