@@ -13,7 +13,7 @@ var rootCmd = &cobra.Command{
 	Short: "fpc - fpl price checker",
 	Long:  `fpc is a simple app for checking player price changes in Fantasy Premier League`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 
