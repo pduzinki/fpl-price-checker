@@ -7,6 +7,7 @@ import (
 
 	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/pkg/storage"
 
 	"github.com/orlangure/gnomock"
 	"github.com/orlangure/gnomock/preset/localstack"
@@ -75,4 +76,36 @@ func (suite *PriceReportRepositoryTestSuite) TestPriceReportAddAndGetByDate() {
 	gotReport, err := suite.repo.GetByDate(ctx, date)
 	suite.NoError(err)
 	suite.EqualValues(report, gotReport)
+}
+
+func (suite *PriceReportRepositoryTestSuite) TestPriceReportAddDuplicate() {
+	ctx := context.Background()
+
+	date := "1999-06-25"
+	report := domain.PriceChangeReport{
+		Date: date,
+		Records: []domain.Record{
+			{
+				Name:        "Salah",
+				OldPrice:    "12.2",
+				NewPrice:    "12.1",
+				Description: "drop",
+			},
+		},
+	}
+
+	err := suite.repo.Add(ctx, date, report)
+	suite.NoError(err)
+
+	err = suite.repo.Add(ctx, date, report)
+	suite.ErrorIs(err, storage.ErrDataAlreadyExists)
+}
+
+func (suite *PriceReportRepositoryTestSuite) TestPriceReportGetNonExistentEntry() {
+	ctx := context.Background()
+
+	date := "1999-06-26"
+	report, err := suite.repo.GetByDate(ctx, date)
+	suite.ErrorIs(err, storage.ErrDataNotFound)
+	suite.EqualValues(report, domain.PriceChangeReport{})
 }
