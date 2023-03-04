@@ -62,12 +62,6 @@ func (pr *PriceReportRepository) Add(ctx context.Context, date string, report do
 		return fmt.Errorf("s3.PriceReportRepository.Add failed to marshal data: %w", err)
 	}
 
-	// TODO check if object exists
-	// _, err = pr.GetByDate(ctx, date)
-	// if err == nil {
-	// 	return fmt.Errorf("s3.PriceReportRepository.Add failed: %w", storage.ErrDataAlreadyExists)
-	// }
-
 	_, err = pr.Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
 		Bucket: &pr.Bucket,
 		Key:    aws.String(filepath.Join(pr.Prefix, date)),
