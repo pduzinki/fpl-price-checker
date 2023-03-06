@@ -7,47 +7,92 @@ import (
 
 	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/pkg/storage"
+
+	"github.com/orlangure/gnomock"
+	"github.com/orlangure/gnomock/preset/localstack"
+	"github.com/stretchr/testify/suite"
 )
 
-func Disabled_TestBar(t *testing.T) {
-	// TODO add proper tests
+type DailyPlayersDataRepositoryTestSuite struct {
+	suite.Suite
+	c    *gnomock.Container
+	repo *DailyPlayersDataRepository
+}
 
-	date := "12-12-12"
+func (suite *DailyPlayersDataRepositoryTestSuite) SetupSuite() {
+	p := localstack.Preset(
+		localstack.WithServices(localstack.S3),
+		localstack.WithS3Files("testdata"),
+		localstack.WithVersion("0.12.0"),
+	)
+
+	c, err := gnomock.Start(p)
+	suite.NoError(err)
+
+	suite.c = c
+
+	cfg := config.AWSConfig{
+		Region:   "eu-west-2",
+		ID:       "test",
+		Secret:   "test",
+		Endpoint: fmt.Sprintf("http://%s/", c.Address(localstack.APIPort)),
+		Bucket:   "fpc-bucket",
+	}
+
+	repo, err := NewDailyPlayersDataRepository(cfg, "players")
+	suite.NoError(err)
+
+	suite.repo = repo
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TearDownSuite() {
+	suite.NoError(gnomock.Stop(suite.c))
+}
+
+func TestDailyPlayersDataRepositoryTestSuite(t *testing.T) {
+	suite.Run(t, new(DailyPlayersDataRepositoryTestSuite))
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataAddAndGetByDate() {
+	ctx := context.Background()
+
+	date := "1999-06-24"
 	players := domain.DailyPlayersData{
 		1: domain.Player{
 			ID:         1,
-			Name:       "Kane",
-			Price:      123,
-			SelectedBy: "55.5",
-		},
-		2: domain.Player{
-			ID:         2,
-			Name:       "Salah",
-			Price:      130,
-			SelectedBy: "23.1",
+			Name:       "Haaland",
+			Price:      132,
+			SelectedBy: "84.3",
 		},
 	}
 
+	err := suite.repo.Add(ctx, date, players)
+	suite.NoError(err)
+
+	gotPlayers, err := suite.repo.GetByDate(ctx, date)
+	suite.NoError(err)
+	suite.EqualValues(players, gotPlayers)
+}
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataAddDuplicate() {
 	ctx := context.Background()
-	cfg := config.NewConfig()
 
-	pr, err := NewDailyPlayersDataRepository(cfg.AWS, "players")
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
-	}
+	date := "1999-06-25"
+	players := make(domain.DailyPlayersData)
 
-	err = pr.Add(ctx, date, players)
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
-	}
+	err := suite.repo.Add(ctx, date, players)
+	suite.NoError(err)
 
-	got, err := pr.GetByDate(ctx, date)
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
-	}
+	err = suite.repo.Add(ctx, date, players)
+	suite.ErrorIs(err, storage.ErrDataAlreadyExists)
+}
 
-	fmt.Println(got)
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataGetNonExistentEntry() {
+	ctx := context.Background()
+
+	date := "1999-06-26"
+	players, err := suite.repo.GetByDate(ctx, date)
+	suite.ErrorIs(err, storage.ErrDataNotFound)
+	suite.Nil(players)
 }

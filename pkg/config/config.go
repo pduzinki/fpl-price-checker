@@ -21,13 +21,13 @@ type AWSConfig struct {
 func NewConfig() *Config {
 	viper.AutomaticEnv()
 
-	// NOTE: default values set for development with localstack
-	viper.SetDefault("AWS_REGION", "eu-west-2")
-	viper.SetDefault("AWS_ID", "test")
-	viper.SetDefault("AWS_SECRET", "test")
+	// set defaults to empty strings
+	viper.SetDefault("AWS_REGION", "")
+	viper.SetDefault("AWS_ID", "")
+	viper.SetDefault("AWS_SECRET", "")
 	viper.SetDefault("AWS_TOKEN", "")
-	viper.SetDefault("AWS_ENDPOINT", "http://localhost:4566")
-	viper.SetDefault("AWS_S3_BUCKET", "fpc-test-bucket-1")
+	viper.SetDefault("AWS_ENDPOINT", "")
+	viper.SetDefault("AWS_S3_BUCKET", "")
 
 	viper.SetConfigFile(".env")
 

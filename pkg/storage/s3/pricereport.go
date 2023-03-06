@@ -9,11 +9,13 @@ import (
 
 	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/pkg/storage"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type Record struct {
@@ -29,28 +31,26 @@ type PriceChangeReport struct {
 }
 
 type PriceReportRepository struct {
-	Uploader   *s3manager.Uploader
-	Downloader *s3manager.Downloader
-	Bucket     string
-	Prefix     string
+	Bucket string
+	Prefix string
+	Client *s3.S3
 }
 
 func NewPriceReportRepository(awsConfig config.AWSConfig, prefix string) (*PriceReportRepository, error) {
 	sess, err := session.NewSession(&aws.Config{
-		Region: &awsConfig.Region,
-		// Credentials:      credentials.NewStaticCredentials(awsConfig.ID, awsConfig.Secret, awsConfig.Token),
+		Region:           &awsConfig.Region,
+		Credentials:      credentials.NewStaticCredentials(awsConfig.ID, awsConfig.Secret, awsConfig.Token),
 		S3ForcePathStyle: aws.Bool(true),
-		// Endpoint:         &awsConfig.Endpoint, // TODO uncomment those later
+		Endpoint:         &awsConfig.Endpoint,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("s3.NewPriceReportRepository failed: %w", err)
 	}
 
 	return &PriceReportRepository{
-		Uploader:   s3manager.NewUploader(sess),
-		Downloader: s3manager.NewDownloader(sess),
-		Bucket:     awsConfig.Bucket,
-		Prefix:     prefix,
+		Bucket: awsConfig.Bucket,
+		Prefix: prefix,
+		Client: s3.New(sess),
 	}, nil
 }
 
@@ -62,8 +62,16 @@ func (pr *PriceReportRepository) Add(ctx context.Context, date string, report do
 		return fmt.Errorf("s3.PriceReportRepository.Add failed to marshal data: %w", err)
 	}
 
-	_, err = pr.Uploader.UploadWithContext(ctx, &s3manager.UploadInput{
-		Bucket: aws.String(pr.Bucket),
+	_, err = pr.Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
+		Bucket: &pr.Bucket,
+		Key:    aws.String(filepath.Join(pr.Prefix, date)),
+	})
+	if err == nil {
+		return fmt.Errorf("s3.PriceReportRepository.Add failed: %w", storage.ErrDataAlreadyExists)
+	}
+
+	_, err = pr.Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		Bucket: &pr.Bucket,
 		Key:    aws.String(filepath.Join(pr.Prefix, date)),
 		Body:   bytes.NewReader(jsonReport),
 	})
@@ -75,14 +83,25 @@ func (pr *PriceReportRepository) Add(ctx context.Context, date string, report do
 }
 
 func (pr *PriceReportRepository) GetByDate(ctx context.Context, date string) (domain.PriceChangeReport, error) {
-	buf := aws.NewWriteAtBuffer([]byte{})
-
-	_, err := pr.Downloader.DownloadWithContext(ctx, buf, &s3.GetObjectInput{
+	out, err := pr.Client.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: &pr.Bucket,
 		Key:    aws.String(filepath.Join(pr.Prefix, date)),
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			switch aerr.Code() {
+			case s3.ErrCodeNoSuchKey:
+				return domain.PriceChangeReport{}, fmt.Errorf("s3.PriceReportRepository.GetByDate failed to download from s3: %w", storage.ErrDataNotFound)
+			}
+		}
+
 		return domain.PriceChangeReport{}, fmt.Errorf("s3.PriceReportRepository.GetByDate failed to download from s3: %w", err)
+	}
+
+	buf := new(bytes.Buffer)
+	_, err = buf.ReadFrom(out.Body)
+	if err != nil {
+		return domain.PriceChangeReport{}, fmt.Errorf("s3.PriceReportRepository.GetByDate failed to read from buffer: %w", err)
 	}
 
 	var s3Report PriceChangeReport
