@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
+
 	"github.com/labstack/echo/v4"
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
 	"github.com/rs/zerolog/log"
 )
 

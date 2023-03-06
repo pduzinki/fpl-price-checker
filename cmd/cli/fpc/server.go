@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/di"
+	"github.com/pduzinki/fpl-price-checker/internal/di"
+
 	"github.com/spf13/cobra"
 )
 

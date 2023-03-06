@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/config"
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
-	"github.com/pduzinki/fpl-price-checker/pkg/storage"
+	"github.com/pduzinki/fpl-price-checker/internal/config"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
+	"github.com/pduzinki/fpl-price-checker/internal/storage"
 
 	"github.com/orlangure/gnomock"
 	"github.com/orlangure/gnomock/preset/localstack"

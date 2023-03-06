@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
 )
 
 //go:generate moq -out generate_moq_test.go . DailyPlayersDataGetter PriceChangeReportAdder
