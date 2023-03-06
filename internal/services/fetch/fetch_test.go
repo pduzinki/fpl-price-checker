@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
-	"github.com/pduzinki/fpl-price-checker/pkg/wrapper"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
+	"github.com/pduzinki/fpl-price-checker/internal/wrapper"
 )
 
 var (

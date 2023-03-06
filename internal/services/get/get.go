@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
 
 	"go.uber.org/multierr"
 )

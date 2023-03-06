@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
-	"github.com/pduzinki/fpl-price-checker/pkg/storage"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
+	"github.com/pduzinki/fpl-price-checker/internal/storage"
 )
 
 type Record struct {

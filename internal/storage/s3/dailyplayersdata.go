@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/pduzinki/fpl-price-checker/internal/config"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
+	"github.com/pduzinki/fpl-price-checker/internal/storage"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/pduzinki/fpl-price-checker/pkg/config"
-	"github.com/pduzinki/fpl-price-checker/pkg/domain"
-	"github.com/pduzinki/fpl-price-checker/pkg/storage"
 )
 
 type Player struct {

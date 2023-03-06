@@ -3,7 +3,8 @@ package fpc
 import (
 	"fmt"
 
-	"github.com/pduzinki/fpl-price-checker/pkg/di"
+	"github.com/pduzinki/fpl-price-checker/internal/di"
+
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
