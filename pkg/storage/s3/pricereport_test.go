@@ -7,13 +7,59 @@ import (
 
 	"github.com/pduzinki/fpl-price-checker/pkg/config"
 	"github.com/pduzinki/fpl-price-checker/pkg/domain"
+	"github.com/pduzinki/fpl-price-checker/pkg/storage"
+
+	"github.com/orlangure/gnomock"
+	"github.com/orlangure/gnomock/preset/localstack"
+	"github.com/stretchr/testify/suite"
 )
 
-func Disabled_TestFoo(t *testing.T) {
-	// TODO replace with proper tests
+type PriceReportRepositoryTestSuite struct {
+	suite.Suite
+	c    *gnomock.Container
+	repo *PriceReportRepository
+}
 
+func (suite *PriceReportRepositoryTestSuite) SetupSuite() {
+	p := localstack.Preset(
+		localstack.WithServices(localstack.S3),
+		localstack.WithS3Files("testdata"),
+		localstack.WithVersion("0.12.0"),
+	)
+
+	c, err := gnomock.Start(p)
+	suite.NoError(err)
+
+	suite.c = c
+
+	cfg := config.AWSConfig{
+		Region:   "eu-west-2",
+		ID:       "test",
+		Secret:   "test",
+		Endpoint: fmt.Sprintf("http://%s/", c.Address(localstack.APIPort)),
+		Bucket:   "fpc-bucket",
+	}
+
+	repo, err := NewPriceReportRepository(cfg, "reports")
+	suite.NoError(err)
+
+	suite.repo = repo
+}
+
+func (suite *PriceReportRepositoryTestSuite) TearDownSuite() {
+	suite.NoError(gnomock.Stop(suite.c))
+}
+
+func TestPriceReportTestSuite(t *testing.T) {
+	suite.Run(t, new(PriceReportRepositoryTestSuite))
+}
+
+func (suite *PriceReportRepositoryTestSuite) TestPriceReportAddAndGetByDate() {
+	ctx := context.Background()
+
+	date := "1999-06-24"
 	report := domain.PriceChangeReport{
-		Date: "12-12-12",
+		Date: date,
 		Records: []domain.Record{
 			{
 				Name:        "Kane",
@@ -24,26 +70,42 @@ func Disabled_TestFoo(t *testing.T) {
 		},
 	}
 
+	err := suite.repo.Add(ctx, date, report)
+	suite.NoError(err)
+
+	gotReport, err := suite.repo.GetByDate(ctx, date)
+	suite.NoError(err)
+	suite.EqualValues(report, gotReport)
+}
+
+func (suite *PriceReportRepositoryTestSuite) TestPriceReportAddDuplicate() {
 	ctx := context.Background()
-	cfg := config.NewConfig()
 
-	pr, err := NewPriceReportRepository(cfg.AWS, "reports")
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
+	date := "1999-06-25"
+	report := domain.PriceChangeReport{
+		Date: date,
+		Records: []domain.Record{
+			{
+				Name:        "Salah",
+				OldPrice:    "12.2",
+				NewPrice:    "12.1",
+				Description: "drop",
+			},
+		},
 	}
 
-	err = pr.Add(ctx, report.Date, report)
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
-	}
+	err := suite.repo.Add(ctx, date, report)
+	suite.NoError(err)
 
-	got, err := pr.GetByDate(ctx, report.Date)
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
-	}
+	err = suite.repo.Add(ctx, date, report)
+	suite.ErrorIs(err, storage.ErrDataAlreadyExists)
+}
 
-	fmt.Println(got)
+func (suite *PriceReportRepositoryTestSuite) TestPriceReportGetNonExistentEntry() {
+	ctx := context.Background()
+
+	date := "1999-06-26"
+	report, err := suite.repo.GetByDate(ctx, date)
+	suite.ErrorIs(err, storage.ErrDataNotFound)
+	suite.EqualValues(report, domain.PriceChangeReport{})
 }
