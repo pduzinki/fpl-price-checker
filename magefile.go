@@ -15,16 +15,25 @@ import (
 const cliBuildDst = "./build/cli/"
 const lambdaBuildDst = "./build/lambdas/"
 
-func ClearCli() error {
+func clearCli() error {
 	return sh.Run("rm", "-rf", cliBuildDst)
 }
 
-func ClearLambdas() error {
+func clearLambdas() error {
 	return sh.Run("rm", "-rf", lambdaBuildDst)
 }
 
+// Clears contents of ./build directory.
+func Clear() error {
+	mg.Deps(clearCli)
+	mg.Deps(clearLambdas)
+
+	return nil
+}
+
+// Builds the cli version of the app.
 func Cli() error {
-	mg.Deps(ClearCli)
+	mg.Deps(clearCli)
 
 	if err := sh.Run("go", "mod", "download"); err != nil {
 		return err
@@ -74,28 +83,30 @@ func lambda(lambdaName string) error {
 	return nil
 }
 
-func LambdaFetch() error {
+func lambdaFetch() error {
 	return lambda("fetch")
 }
 
-func LambdaGenerate() error {
+func lambdaGenerate() error {
 	return lambda("generate")
 }
 
-func LambdaGet() error {
+func lambdaGet() error {
 	return lambda("get")
 }
 
+// Builds lambda-based version of the app.
 func Lambdas() error {
-	mg.Deps(ClearLambdas)
+	mg.Deps(clearLambdas)
 
-	mg.Deps(LambdaFetch)
-	mg.Deps(LambdaGenerate)
-	mg.Deps(LambdaGet)
+	mg.Deps(lambdaFetch)
+	mg.Deps(lambdaGenerate)
+	mg.Deps(lambdaGet)
 
 	return nil
 }
 
+// Runs all tests.
 func Test() error {
 	_, err := sh.Exec(nil, os.Stdout, os.Stderr, "go", "test", "./...", "-cover")
 	return err
