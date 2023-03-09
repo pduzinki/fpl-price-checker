@@ -57,6 +57,10 @@ func NewPriceReportRepository(awsConfig config.AWSConfig, prefix string) (*Price
 func (pr *PriceReportRepository) Add(ctx context.Context, date string, report domain.PriceChangeReport) error {
 	s3Report := toS3Report(report)
 
+	if err := domain.ParseDate(date); err != nil {
+		return fmt.Errorf("s3.PriceReportRepository.Add failed to parse date: %w", err)
+	}
+
 	jsonReport, err := json.Marshal(s3Report)
 	if err != nil {
 		return fmt.Errorf("s3.PriceReportRepository.Add failed to marshal data: %w", err)
