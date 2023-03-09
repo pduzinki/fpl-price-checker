@@ -109,3 +109,23 @@ func (suite *PriceReportRepositoryTestSuite) TestPriceReportGetNonExistentEntry(
 	suite.ErrorIs(err, storage.ErrDataNotFound)
 	suite.EqualValues(report, domain.PriceChangeReport{})
 }
+
+func (suite *PriceReportRepositoryTestSuite) TestPriceReportAddWithIncorrectlyFormattedDate() {
+	ctx := context.Background()
+
+	date := "not-even-a-date"
+	report := domain.PriceChangeReport{
+		Date: date,
+		Records: []domain.Record{
+			{
+				Name:        "Kane",
+				OldPrice:    "12.2",
+				NewPrice:    "12.3",
+				Description: "rise",
+			},
+		},
+	}
+
+	err := suite.repo.Add(ctx, date, report)
+	suite.Error(err)
+}

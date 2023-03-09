@@ -96,3 +96,20 @@ func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataGetNonExis
 	suite.ErrorIs(err, storage.ErrDataNotFound)
 	suite.Nil(players)
 }
+
+func (suite *DailyPlayersDataRepositoryTestSuite) TestDailyPlayersDataAddWithIncorrectlyFormattedDate() {
+	ctx := context.Background()
+
+	date := "not-a-date"
+	players := domain.DailyPlayersData{
+		1: domain.Player{
+			ID:         1,
+			Name:       "Haaland",
+			Price:      132,
+			SelectedBy: "84.3",
+		},
+	}
+
+	err := suite.repo.Add(ctx, date, players)
+	suite.Error(err)
+}

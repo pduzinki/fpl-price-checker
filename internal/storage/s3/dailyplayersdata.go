@@ -54,6 +54,10 @@ func NewDailyPlayersDataRepository(awsConfig config.AWSConfig, prefix string) (*
 func (dr *DailyPlayersDataRepository) Add(ctx context.Context, date string, players domain.DailyPlayersData) error {
 	s3Players := toS3DailyPlayersData(players)
 
+	if err := domain.ParseDate(date); err != nil {
+		return fmt.Errorf("s3.DailyPlayersDataRepository.Add failed to parse date: %w", err)
+	}
+
 	jsonPlayers, err := json.Marshal(s3Players)
 	if err != nil {
 		return fmt.Errorf("s3.NewDailyPlayersDataRepository failed to mashal data: %w", err)
