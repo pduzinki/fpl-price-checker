@@ -60,7 +60,7 @@ func (dr *DailyPlayersDataRepository) Add(ctx context.Context, date string, play
 
 	jsonPlayers, err := json.Marshal(s3Players)
 	if err != nil {
-		return fmt.Errorf("s3.NewDailyPlayersDataRepository failed to mashal data: %w", err)
+		return fmt.Errorf("s3.DailyPlayersDataRepository failed to mashal data: %w", err)
 	}
 
 	_, err = dr.Client.HeadObjectWithContext(ctx, &s3.HeadObjectInput{
@@ -68,7 +68,7 @@ func (dr *DailyPlayersDataRepository) Add(ctx context.Context, date string, play
 		Key:    aws.String(filepath.Join(dr.Prefix, date)),
 	})
 	if err == nil {
-		return fmt.Errorf("s3.NewDailyPlayersDataRepository.Add failed: %w", storage.ErrDataAlreadyExists)
+		return fmt.Errorf("s3.DailyPlayersDataRepository.Add failed: %w", storage.ErrDataAlreadyExists)
 	}
 
 	_, err = dr.Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
@@ -77,7 +77,7 @@ func (dr *DailyPlayersDataRepository) Add(ctx context.Context, date string, play
 		Body:   bytes.NewReader(jsonPlayers),
 	})
 	if err != nil {
-		return fmt.Errorf("s3.NewDailyPlayersDataRepository failed to upload to s3: %w", err)
+		return fmt.Errorf("s3.DailyPlayersDataRepository failed to upload to s3: %w", err)
 	}
 
 	return nil
