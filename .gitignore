@@ -8,3 +8,4 @@ TODO
 *.tfvars
 *.terraform
 .terraform.lock.hcl
+*.tfstate*
