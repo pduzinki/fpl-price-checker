@@ -7,3 +7,4 @@ TODO
 .env
 *.tfvars
 *.terraform
+.terraform.lock.hcl
