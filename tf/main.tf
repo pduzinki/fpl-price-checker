@@ -28,6 +28,15 @@ resource "aws_s3_object" "lambda_fetch" {
   etag = filemd5("${path.module}/../build/lambdas/fetch.zip")
 }
 
+resource "aws_s3_object" "lambda_generate" {
+  bucket = aws_s3_bucket.lambda_storage_bucket.id
+
+  key    = "generate.zip"
+  source = "${path.module}/../build/lambdas/generate.zip"
+
+  etag = filemd5("${path.module}/../build/lambdas/generate.zip")
+}
+
 resource "aws_lambda_function" "fetch" {
   function_name = "fetch_tf"
 
@@ -50,8 +59,36 @@ resource "aws_lambda_function" "fetch" {
   }
 }
 
+resource "aws_lambda_function" "generate" {
+  function_name = "generate_tf"
+
+  s3_bucket = aws_s3_bucket.lambda_storage_bucket.id
+  s3_key    = aws_s3_object.lambda_generate.key
+
+  runtime = "go1.x"
+  handler = "generate"
+
+  # source_code_hash = 
+
+  role = aws_iam_role.lambda_generate_exec.arn
+
+  environment {
+    variables = {
+      AWS_ID        = "${var.AWS_ID}"
+      AWS_S3_BUCKET = "${var.AWS_S3_BUCKET}"
+      AWS_SECRET    = "${var.AWS_SECRET}"
+    }
+  }
+}
+
 resource "aws_cloudwatch_log_group" "fetch" {
   name = "/aws/lambda/${aws_lambda_function.fetch.function_name}"
+
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_log_group" "generate" {
+  name = "/aws/lambda/${aws_lambda_function.generate.function_name}"
 
   retention_in_days = 30
 }
@@ -73,10 +110,33 @@ resource "aws_iam_role" "lambda_fetch_exec" {
   })
 }
 
+resource "aws_iam_role" "lambda_generate_exec" {
+  name = "lambda_generate"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Sid    = ""
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+      }
+    ]
+  })
+}
+
 resource "aws_cloudwatch_event_rule" "fetch-cron" {
   name        = "fetch-tf-cron"
   description = "event123123"
   schedule_expression = "cron(30 3 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_rule" "generate-cron" {
+  name        = "generate-tf-cron"
+  description = "event"
+  schedule_expression = "cron(35 3 * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {
@@ -84,9 +144,19 @@ resource "aws_cloudwatch_event_target" "lambda_target" {
   arn       = aws_lambda_function.fetch.arn
 }
 
+resource "aws_cloudwatch_event_target" "lambda_generate_target" {
+  rule      = aws_cloudwatch_event_rule.generate-cron.name
+  arn       = aws_lambda_function.generate.arn
+}
+
 resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
   role = aws_iam_role.lambda_fetch_exec.name
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy_generate" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role = aws_iam_role.lambda_generate_exec.name
 }
 
 resource "aws_lambda_permission" "allow_eventbridge" {
@@ -95,4 +165,12 @@ resource "aws_lambda_permission" "allow_eventbridge" {
   function_name = aws_lambda_function.fetch.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.fetch-cron.arn
+}
+
+resource "aws_lambda_permission" "allow_eventbridge_generate" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.generate.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.generate-cron.arn
 }
