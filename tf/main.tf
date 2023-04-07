@@ -2,6 +2,10 @@ provider "aws" {
   region = var.aws_region
 }
 
+resource "aws_s3_bucket" "fpc_bucket" {
+  bucket = "${var.AWS_S3_BUCKET}"
+}
+
 resource "random_pet" "lambda_storage_bucket_name" {
   prefix = "fpc-lambda-storage"
 }
@@ -67,4 +71,28 @@ resource "aws_iam_role" "lambda_fetch_exec" {
       }
     ]
   })
+}
+
+resource "aws_cloudwatch_event_rule" "fetch-cron" {
+  name        = "fetch-tf-cron"
+  description = "event123123"
+  schedule_expression = "cron(30 3 * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "lambda_target" {
+  rule      = aws_cloudwatch_event_rule.fetch-cron.name
+  arn       = aws_lambda_function.fetch.arn
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+  role = aws_iam_role.lambda_fetch_exec.name
+}
+
+resource "aws_lambda_permission" "allow_eventbridge" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.fetch.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.fetch-cron.arn
 }
