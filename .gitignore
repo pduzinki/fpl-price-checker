@@ -5,3 +5,7 @@ TODO
 /volume
 /build
 .env
+*.tfvars
+*.terraform
+.terraform.lock.hcl
+*.tfstate*
