@@ -1,5 +1,5 @@
-output "lambda-storage-bucket-name" {
-  description = "name of the s3 bucket used to store lambdas code."
+output "fpc_lambda_zip_storage_bucket_name" {
+  description = "name of the s3 bucket used to store lambdas zips."
 
-  value = random_pet.lambda_storage_bucket_name
+  value = random_pet.fpc_lambda_zip_storage_bucket_name
 }

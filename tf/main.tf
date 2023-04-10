@@ -3,46 +3,42 @@ provider "aws" {
 }
 
 # s3 storage for fpc data
-resource "aws_s3_bucket" "fpc_bucket" {
+resource "aws_s3_bucket" "fpc_data_bucket" {
   bucket = var.AWS_S3_BUCKET
 }
 
-# s3 storage for lambdas zips
-resource "random_pet" "lambda_storage_bucket_name" {
-  prefix = "fpc-lambda-storage"
+# s3 storage for fpc lambdas zips
+resource "random_pet" "fpc_lambda_zip_storage_bucket_name" {
+  prefix = "fpc-lambda-zip-storage"
 }
 
-resource "aws_s3_bucket" "lambda_storage_bucket" {
-  bucket = random_pet.lambda_storage_bucket_name.id
+resource "aws_s3_bucket" "fpc_lambda_zip_storage_bucket" {
+  bucket = random_pet.fpc_lambda_zip_storage_bucket_name.id
 }
 
-resource "aws_s3_bucket_acl" "lambda_storage_bucket_acl" {
-  bucket = aws_s3_bucket.lambda_storage_bucket.id
+resource "aws_s3_bucket_acl" "fpc_lambda_zip_storage_bucket_acl" {
+  bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
   acl    = "private"
 }
 
-# lambda fetch
-resource "aws_s3_object" "lambda_fetch" {
-  bucket = aws_s3_bucket.lambda_storage_bucket.id
+# lambda for fpc 'fetch' command
+resource "aws_s3_object" "fpc_fetch" {
+  bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
 
   key    = "fetch.zip"
   source = "${path.module}/../build/lambdas/fetch.zip"
-
-  # etag = filemd5("${path.module}/../build/lambdas/fetch.zip")`
 }
 
-resource "aws_lambda_function" "fetch" {
-  function_name = "fetch_tf"
+resource "aws_lambda_function" "fpc_fetch" {
+  function_name = "fpc-fetch"
 
-  s3_bucket = aws_s3_bucket.lambda_storage_bucket.id
-  s3_key    = aws_s3_object.lambda_fetch.key
+  s3_bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
+  s3_key    = aws_s3_object.fpc_fetch.key
 
   runtime = "go1.x"
   handler = "fetch"
 
-  # source_code_hash = 
-
-  role = aws_iam_role.lambda_fetch_exec.arn
+  role = aws_iam_role.fpc_fetch.arn
 
   environment {
     variables = {
@@ -53,14 +49,14 @@ resource "aws_lambda_function" "fetch" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "fetch" {
-  name = "/aws/lambda/${aws_lambda_function.fetch.function_name}"
+resource "aws_cloudwatch_log_group" "fpc_fetch" {
+  name = "/aws/lambda/${aws_lambda_function.fpc_fetch.function_name}"
 
   retention_in_days = 30
 }
 
-resource "aws_iam_role" "lambda_fetch_exec" {
-  name = "lambda_fetch"
+resource "aws_iam_role" "fpc_fetch" {
+  name = "fpc-fetch"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -76,52 +72,48 @@ resource "aws_iam_role" "lambda_fetch_exec" {
   })
 }
 
-resource "aws_cloudwatch_event_rule" "fetch-cron" {
-  name                = "fetch-tf-cron"
-  description         = "event123123"
+resource "aws_cloudwatch_event_rule" "fpc_fetch" {
+  name                = "fpc-fetch-eventbridge-rule"
+  description         = "eventbridge schedule rule for fpc 'fetch' command"
   schedule_expression = "cron(30 3 * * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "lambda_target" {
-  rule = aws_cloudwatch_event_rule.fetch-cron.name
-  arn  = aws_lambda_function.fetch.arn
+resource "aws_cloudwatch_event_target" "fpc_fetch" {
+  rule = aws_cloudwatch_event_rule.fpc_fetch.name
+  arn  = aws_lambda_function.fpc_fetch.arn
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_policy" {
+resource "aws_iam_role_policy_attachment" "fpc_fetch_lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = aws_iam_role.lambda_fetch_exec.name
+  role       = aws_iam_role.fpc_fetch.name
 }
 
-resource "aws_lambda_permission" "allow_eventbridge" {
+resource "aws_lambda_permission" "fpc_fetch_allow_eventbridge" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.fetch.function_name
+  function_name = aws_lambda_function.fpc_fetch.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.fetch-cron.arn
+  source_arn    = aws_cloudwatch_event_rule.fpc_fetch.arn
 }
 
-# lambda generate
-resource "aws_s3_object" "lambda_generate" {
-  bucket = aws_s3_bucket.lambda_storage_bucket.id
+# lambda for fpc 'generate' command
+resource "aws_s3_object" "fpc_generate" {
+  bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
 
   key    = "generate.zip"
   source = "${path.module}/../build/lambdas/generate.zip"
-
-  # etag = filemd5("${path.module}/../build/lambdas/generate.zip")
 }
 
-resource "aws_lambda_function" "generate" {
-  function_name = "generate_tf"
+resource "aws_lambda_function" "fpc_generate" {
+  function_name = "fpc-generate"
 
-  s3_bucket = aws_s3_bucket.lambda_storage_bucket.id
-  s3_key    = aws_s3_object.lambda_generate.key
+  s3_bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
+  s3_key    = aws_s3_object.fpc_generate.key
 
   runtime = "go1.x"
   handler = "generate"
 
-  # source_code_hash = 
-
-  role = aws_iam_role.lambda_generate_exec.arn
+  role = aws_iam_role.fpc_generate.arn
 
   environment {
     variables = {
@@ -132,13 +124,13 @@ resource "aws_lambda_function" "generate" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "generate" {
-  name = "/aws/lambda/${aws_lambda_function.generate.function_name}"
+resource "aws_cloudwatch_log_group" "fpc_generate" {
+  name = "/aws/lambda/${aws_lambda_function.fpc_generate.function_name}"
 
   retention_in_days = 30
 }
 
-resource "aws_iam_role" "lambda_generate_exec" {
+resource "aws_iam_role" "fpc_generate" {
   name = "lambda_generate"
 
   assume_role_policy = jsonencode({
@@ -155,53 +147,49 @@ resource "aws_iam_role" "lambda_generate_exec" {
   })
 }
 
-resource "aws_cloudwatch_event_rule" "generate-cron" {
-  name                = "generate-tf-cron"
-  description         = "event"
+resource "aws_cloudwatch_event_rule" "fpc_generate" {
+  name                = "fpc-generate-eventbridge-rule"
+  description         = "eventbridge schedule rule for fpc 'generate' command"
   schedule_expression = "cron(35 3 * * ? *)"
 }
 
-resource "aws_cloudwatch_event_target" "lambda_generate_target" {
-  rule = aws_cloudwatch_event_rule.generate-cron.name
-  arn  = aws_lambda_function.generate.arn
+resource "aws_cloudwatch_event_target" "fpc_generate" {
+  rule = aws_cloudwatch_event_rule.fpc_generate.name
+  arn  = aws_lambda_function.fpc_generate.arn
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_policy_generate" {
+resource "aws_iam_role_policy_attachment" "fpc_generate_lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = aws_iam_role.lambda_generate_exec.name
+  role       = aws_iam_role.fpc_generate.name
 }
 
-resource "aws_lambda_permission" "allow_eventbridge_generate" {
+resource "aws_lambda_permission" "fpc_getch_allow_eventbridge" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.generate.function_name
+  function_name = aws_lambda_function.fpc_generate.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.generate-cron.arn
+  source_arn    = aws_cloudwatch_event_rule.fpc_generate.arn
 }
 
 
-# lambda get
-resource "aws_s3_object" "lambda_get" {
-  bucket = aws_s3_bucket.lambda_storage_bucket.id
+# lambda for fpc 'get' command
+resource "aws_s3_object" "fpc_get" {
+  bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
 
   key    = "get.zip"
   source = "${path.module}/../build/lambdas/get.zip"
-
-  # etag = filemd5("${path.module}/../build/lambdas/get.zip")
 }
 
-resource "aws_lambda_function" "get" {
-  function_name = "get_tf"
+resource "aws_lambda_function" "fpc_get" {
+  function_name = "fpc-get"
 
-  s3_bucket = aws_s3_bucket.lambda_storage_bucket.id
-  s3_key    = aws_s3_object.lambda_get.key
+  s3_bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
+  s3_key    = aws_s3_object.fpc_get.key
 
   runtime = "go1.x"
   handler = "get"
 
-  # source_code_hash = 
-
-  role = aws_iam_role.lambda_get_exec.arn
+  role = aws_iam_role.fpc_get.arn
 
   environment {
     variables = {
@@ -212,14 +200,14 @@ resource "aws_lambda_function" "get" {
   }
 }
 
-resource "aws_cloudwatch_log_group" "get" {
-  name = "/aws/lambda/${aws_lambda_function.get.function_name}"
+resource "aws_cloudwatch_log_group" "fpc_get" {
+  name = "/aws/lambda/${aws_lambda_function.fpc_get.function_name}"
 
   retention_in_days = 30
 }
 
-resource "aws_iam_role" "lambda_get_exec" {
-  name = "lambda_get"
+resource "aws_iam_role" "fpc_get" {
+  name = "fpc-get"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -235,25 +223,34 @@ resource "aws_iam_role" "lambda_get_exec" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_policy_get" {
+resource "aws_iam_role_policy_attachment" "fpc_get_lambda_policyt" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-  role       = aws_iam_role.lambda_get_exec.name
+  role       = aws_iam_role.fpc_get.name
 }
 
-# api gateway
-resource "aws_apigatewayv2_api" "lambda" {
-  name          = "fpc_tf"
+resource "aws_lambda_permission" "fpc_get_allow_api_gateway" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.fpc_get.function_name
+  principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.fpc_api_gateway.execution_arn}/*/*"
+}
+
+# api gateway to access reports via fpc 'get' lambda
+resource "aws_apigatewayv2_api" "fpc_api_gateway" {
+  name          = "fpc-api-gateway"
   protocol_type = "HTTP"
 }
 
-resource "aws_apigatewayv2_stage" "lambda" {
-  api_id = aws_apigatewayv2_api.lambda.id
+resource "aws_apigatewayv2_stage" "fpc_api_gateway_stage" {
+  api_id = aws_apigatewayv2_api.fpc_api_gateway.id
 
-  name        = "$default"
+  name        = "prod"
   auto_deploy = true
 
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gw.arn
+    destination_arn = aws_cloudwatch_log_group.fpc_api_gateway.arn
 
     format = jsonencode({
       requestId               = "$context.requestId"
@@ -271,34 +268,25 @@ resource "aws_apigatewayv2_stage" "lambda" {
   }
 }
 
-resource "aws_apigatewayv2_integration" "hello_world" {
-  api_id = aws_apigatewayv2_api.lambda.id
+resource "aws_apigatewayv2_integration" "fpc_api_gateway" {
+  api_id = aws_apigatewayv2_api.fpc_api_gateway.id
 
-  integration_uri    = aws_lambda_function.get.invoke_arn
+  integration_uri    = aws_lambda_function.fpc_get.invoke_arn
   integration_type   = "AWS_PROXY"
   integration_method = "POST"
 
   payload_format_version = "2.0"
 }
 
-resource "aws_apigatewayv2_route" "hello_world" {
-  api_id = aws_apigatewayv2_api.lambda.id
+resource "aws_apigatewayv2_route" "fpc_get_latest" {
+  api_id = aws_apigatewayv2_api.fpc_api_gateway.id
 
   route_key = "GET /latest"
-  target    = "integrations/${aws_apigatewayv2_integration.hello_world.id}"
+  target    = "integrations/${aws_apigatewayv2_integration.fpc_api_gateway.id}"
 }
 
-resource "aws_cloudwatch_log_group" "api_gw" {
-  name = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
+resource "aws_cloudwatch_log_group" "fpc_api_gateway" {
+  name = "/aws/api_gw/${aws_apigatewayv2_api.fpc_api_gateway.name}"
 
   retention_in_days = 30
-}
-
-resource "aws_lambda_permission" "api_gw" {
-  statement_id  = "AllowExecutionFromAPIGateway"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.get.function_name
-  principal     = "apigateway.amazonaws.com"
-
-  source_arn = "${aws_apigatewayv2_api.lambda.execution_arn}/*/*"
 }
