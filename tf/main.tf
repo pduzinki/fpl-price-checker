@@ -35,6 +35,8 @@ resource "aws_lambda_function" "fpc_fetch" {
   s3_bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
   s3_key    = aws_s3_object.fpc_fetch.key
 
+  source_code_hash = filebase64sha256(aws_s3_object.fpc_fetch.source)
+
   runtime = "go1.x"
   handler = "fetch"
 
@@ -109,6 +111,8 @@ resource "aws_lambda_function" "fpc_generate" {
 
   s3_bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
   s3_key    = aws_s3_object.fpc_generate.key
+
+  source_code_hash = filebase64sha256(aws_s3_object.fpc_generate.source)
 
   runtime = "go1.x"
   handler = "generate"
@@ -185,6 +189,8 @@ resource "aws_lambda_function" "fpc_get" {
 
   s3_bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
   s3_key    = aws_s3_object.fpc_get.key
+
+  source_code_hash = filebase64sha256(aws_s3_object.fpc_get.source)
 
   runtime = "go1.x"
   handler = "get"
