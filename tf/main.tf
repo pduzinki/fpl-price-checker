@@ -27,6 +27,8 @@ resource "aws_s3_object" "fpc_fetch" {
 
   key    = "fetch.zip"
   source = "${path.module}/../build/lambdas/fetch.zip"
+
+  etag = filemd5("${path.module}/../build/lambdas/fetch.zip")
 }
 
 resource "aws_lambda_function" "fpc_fetch" {
@@ -104,6 +106,8 @@ resource "aws_s3_object" "fpc_generate" {
 
   key    = "generate.zip"
   source = "${path.module}/../build/lambdas/generate.zip"
+
+  etag = filemd5("${path.module}/../build/lambdas/generate.zip")
 }
 
 resource "aws_lambda_function" "fpc_generate" {
@@ -182,6 +186,8 @@ resource "aws_s3_object" "fpc_get" {
 
   key    = "get.zip"
   source = "${path.module}/../build/lambdas/get.zip"
+
+  etag = filemd5("${path.module}/../build/lambdas/get.zip")
 }
 
 resource "aws_lambda_function" "fpc_get" {
