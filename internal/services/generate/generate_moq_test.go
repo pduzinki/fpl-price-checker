@@ -158,3 +158,62 @@ func (mock *PriceChangeReportAdderMock) AddCalls() []struct {
 	mock.lockAdd.RUnlock()
 	return calls
 }
+
+// Ensure, that TeamsGetterMock does implement TeamsGetter.
+// If this is not the case, regenerate this file with moq.
+var _ TeamsGetter = &TeamsGetterMock{}
+
+// TeamsGetterMock is a mock implementation of TeamsGetter.
+//
+//	func TestSomethingThatUsesTeamsGetter(t *testing.T) {
+//
+//		// make and configure a mocked TeamsGetter
+//		mockedTeamsGetter := &TeamsGetterMock{
+//			GetAllFunc: func() (map[int]domain.Team, error) {
+//				panic("mock out the GetAll method")
+//			},
+//		}
+//
+//		// use mockedTeamsGetter in code that requires TeamsGetter
+//		// and then make assertions.
+//
+//	}
+type TeamsGetterMock struct {
+	// GetAllFunc mocks the GetAll method.
+	GetAllFunc func() (map[int]domain.Team, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// GetAll holds details about calls to the GetAll method.
+		GetAll []struct {
+		}
+	}
+	lockGetAll sync.RWMutex
+}
+
+// GetAll calls GetAllFunc.
+func (mock *TeamsGetterMock) GetAll() (map[int]domain.Team, error) {
+	if mock.GetAllFunc == nil {
+		panic("TeamsGetterMock.GetAllFunc: method is nil but TeamsGetter.GetAll was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockGetAll.Lock()
+	mock.calls.GetAll = append(mock.calls.GetAll, callInfo)
+	mock.lockGetAll.Unlock()
+	return mock.GetAllFunc()
+}
+
+// GetAllCalls gets all the calls that were made to GetAll.
+// Check the length with:
+//
+//	len(mockedTeamsGetter.GetAllCalls())
+func (mock *TeamsGetterMock) GetAllCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockGetAll.RLock()
+	calls = mock.calls.GetAll
+	mock.lockGetAll.RUnlock()
+	return calls
+}

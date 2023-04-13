@@ -52,6 +52,18 @@ func (w *Wrapper) GetPlayers() ([]Player, error) {
 	return bs.Players, nil
 }
 
+func (w *Wrapper) GetTeams() ([]Team, error) {
+	url := fmt.Sprintf(w.baseURL + "/bootstrap-static/")
+	var bs Bootstrap
+
+	err := w.fetchData(url, &bs)
+	if err != nil {
+		return nil, fmt.Errorf("GetTeams: %w", err)
+	}
+
+	return bs.Teams, nil
+}
+
 // fetchData is a helper method that forms and sends http request,
 // and unmarshals the response
 func (w *Wrapper) fetchData(url string, data interface{}) error {

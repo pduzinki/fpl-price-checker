@@ -57,6 +57,7 @@ func (fs *FetchService) Fetch(ctx context.Context) error {
 func toDomainPlayer(wp *wrapper.Player) domain.Player {
 	return domain.Player{
 		ID:         wp.ID,
+		TeamID:     wp.Team,
 		Name:       wp.WebName,
 		Price:      wp.Price,
 		SelectedBy: wp.SelectedBy,

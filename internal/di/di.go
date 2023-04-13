@@ -5,11 +5,13 @@ import (
 	"path/filepath"
 
 	"github.com/pduzinki/fpl-price-checker/internal/config"
+	"github.com/pduzinki/fpl-price-checker/internal/domain"
 	"github.com/pduzinki/fpl-price-checker/internal/rest"
 	"github.com/pduzinki/fpl-price-checker/internal/services/fetch"
 	"github.com/pduzinki/fpl-price-checker/internal/services/generate"
 	"github.com/pduzinki/fpl-price-checker/internal/services/get"
 	"github.com/pduzinki/fpl-price-checker/internal/storage/fs"
+	"github.com/pduzinki/fpl-price-checker/internal/storage/memory"
 	"github.com/pduzinki/fpl-price-checker/internal/storage/s3"
 	"github.com/pduzinki/fpl-price-checker/internal/wrapper"
 
@@ -78,6 +80,24 @@ func NewPriceReportS3Repository() *s3.PriceReportRepository {
 	return rr
 }
 
+func NewTeamInMemoryRepository() *memory.TeamRepository {
+	tr := memory.NewTeamRepository()
+
+	// NOTE: teams data can be fetched here, since it is quite static.
+	wr := Wrapper()
+
+	teams, err := wr.GetTeams()
+	if err != nil {
+		log.Fatal().Err(err).Msg("di.NewTeamInMemoryRepository - failed to get teams data")
+	}
+
+	for _, team := range teams {
+		tr.Add(domain.Team(team))
+	}
+
+	return &tr
+}
+
 func NewFetchService() *fetch.FetchService {
 	wr := Wrapper()
 	dr := DailyPlayersDataFsRepository()
@@ -96,15 +116,17 @@ func NewFetchServiceS3() *fetch.FetchService {
 func NewGenerateService() *generate.GenerateService {
 	pr := DailyPlayersDataFsRepository()
 	rr := NewPriceReportFsRepository()
+	tr := NewTeamInMemoryRepository()
 
-	return generate.NewGenerateService(pr, rr)
+	return generate.NewGenerateService(pr, rr, tr)
 }
 
 func NewGenerateServiceS3() *generate.GenerateService {
 	pr := DailyPlayersDataS3Repository()
 	rr := NewPriceReportS3Repository()
+	tr := NewTeamInMemoryRepository()
 
-	return generate.NewGenerateService(pr, rr)
+	return generate.NewGenerateService(pr, rr, tr)
 }
 
 func NewGetService() *get.GetService {
