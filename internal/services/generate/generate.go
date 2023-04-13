@@ -3,12 +3,23 @@ package generate
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strconv"
 	"time"
 
 	"github.com/pduzinki/fpl-price-checker/internal/domain"
 )
 
 //go:generate moq -out generate_moq_test.go . DailyPlayersDataGetter PriceChangeReportAdder TeamsGetter
+
+type Record struct {
+	Name        string
+	Team        string
+	OldPrice    string
+	NewPrice    string
+	Description string
+	SelectedBy  float64
+}
 
 type DailyPlayersDataGetter interface {
 	GetByDate(ctx context.Context, date string) (domain.DailyPlayersData, error)
@@ -69,13 +80,13 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 }
 
 func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, teams map[int]domain.Team) []domain.Record {
-	priceChangedPlayers := make([]domain.Record, 0)
-	newPlayers := make([]domain.Record, 0)
+	priceChangedPlayers := make([]Record, 0)
+	newPlayers := make([]Record, 0)
 
 	for tk, tv := range todayPlayers {
 		yv, prs := yesterdayPlayers[tk]
 		if !prs {
-			newPlayers = append(newPlayers, domain.Record{
+			newPlayers = append(newPlayers, Record{
 				Name:        tv.Name,
 				Team:        addTeam(teams, tv.TeamID),
 				OldPrice:    "-",
@@ -86,21 +97,36 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tea
 		}
 
 		if yv.Price != tv.Price {
-			record := domain.Record{
+			selectedBy, err := strconv.ParseFloat(tv.SelectedBy, 64)
+			if err != nil {
+				selectedBy = 0.0
+			}
+
+			record := Record{
 				Name:        tv.Name,
 				Team:        addTeam(teams, tv.TeamID),
 				OldPrice:    fmt.Sprintf("%.1f", float64(yv.Price)/10.),
 				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
 				Description: addDescription(yv.Price, tv.Price),
+				SelectedBy:  selectedBy,
 			}
 
 			priceChangedPlayers = append(priceChangedPlayers, record)
 		}
 	}
 
+	sort.Slice(priceChangedPlayers, func(i, j int) bool {
+		return priceChangedPlayers[i].SelectedBy > priceChangedPlayers[j].SelectedBy
+	})
+
 	priceChangedPlayers = append(priceChangedPlayers, newPlayers...)
 
-	return priceChangedPlayers
+	records := make([]domain.Record, 0, len(priceChangedPlayers))
+	for _, player := range priceChangedPlayers {
+		records = append(records, toDomainRecord(player))
+	}
+
+	return records
 }
 
 func addDescription(oldPrice, newPrice int) string {
@@ -116,4 +142,14 @@ func addTeam(teams map[int]domain.Team, teamID int) string {
 	}
 
 	return "-"
+}
+
+func toDomainRecord(record Record) domain.Record {
+	return domain.Record{
+		Name:        record.Name,
+		Team:        record.Team,
+		OldPrice:    record.OldPrice,
+		NewPrice:    record.NewPrice,
+		Description: record.Description,
+	}
 }
