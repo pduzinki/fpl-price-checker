@@ -8,7 +8,7 @@ import (
 	"github.com/pduzinki/fpl-price-checker/internal/domain"
 )
 
-//go:generate moq -out generate_moq_test.go . DailyPlayersDataGetter PriceChangeReportAdder
+//go:generate moq -out generate_moq_test.go . DailyPlayersDataGetter PriceChangeReportAdder TeamsGetter
 
 type DailyPlayersDataGetter interface {
 	GetByDate(ctx context.Context, date string) (domain.DailyPlayersData, error)
@@ -18,30 +18,21 @@ type PriceChangeReportAdder interface {
 	Add(ctx context.Context, date string, report domain.PriceChangeReport) error
 }
 
-type TeamAdder interface {
-	Add(teams ...domain.Team)
-}
-
-type TeamGetter interface {
-	GetByID(id int) (domain.Team, error)
-}
-
-type TeamRepository interface {
-	TeamAdder
-	TeamGetter
+type TeamsGetter interface {
+	GetAll() (map[int]domain.Team, error)
 }
 
 type GenerateService struct {
 	dg DailyPlayersDataGetter
 	ra PriceChangeReportAdder
-	tr TeamRepository
+	tg TeamsGetter
 }
 
-func NewGenerateService(sg DailyPlayersDataGetter, ra PriceChangeReportAdder, tr TeamRepository) *GenerateService {
+func NewGenerateService(sg DailyPlayersDataGetter, ra PriceChangeReportAdder, tg TeamsGetter) *GenerateService {
 	return &GenerateService{
 		dg: sg,
 		ra: ra,
-		tr: tr,
+		tg: tg,
 	}
 }
 
@@ -59,9 +50,14 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get today's players data: %w", err)
 	}
 
+	teams, err := gs.tg.GetAll()
+	if err != nil {
+		return fmt.Errorf("generate.GenerateService.GeneratePriceReport failed to get teams data: %w", err)
+	}
+
 	report := domain.PriceChangeReport{
 		Date:    todaysDate,
-		Records: generateRecords(yesterdayPlayers, todayPlayers, gs.tr),
+		Records: generateRecords(yesterdayPlayers, todayPlayers, teams),
 	}
 
 	err = gs.ra.Add(ctx, todaysDate, report)
@@ -72,7 +68,7 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 	return nil
 }
 
-func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tg TeamGetter) []domain.Record {
+func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, teams map[int]domain.Team) []domain.Record {
 	priceChangedPlayers := make([]domain.Record, 0)
 	newPlayers := make([]domain.Record, 0)
 
@@ -81,7 +77,7 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tg 
 		if !prs {
 			newPlayers = append(newPlayers, domain.Record{
 				Name:        tv.Name,
-				Team:        addTeam(tg, tv.TeamID),
+				Team:        addTeam(teams, tv.TeamID),
 				OldPrice:    "-",
 				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
 				Description: "new",
@@ -92,7 +88,7 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tg 
 		if yv.Price != tv.Price {
 			record := domain.Record{
 				Name:        tv.Name,
-				Team:        addTeam(tg, tv.TeamID),
+				Team:        addTeam(teams, tv.TeamID),
 				OldPrice:    fmt.Sprintf("%.1f", float64(yv.Price)/10.),
 				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
 				Description: addDescription(yv.Price, tv.Price),
@@ -114,11 +110,10 @@ func addDescription(oldPrice, newPrice int) string {
 	return "rise"
 }
 
-func addTeam(tg TeamGetter, teamID int) string {
-	team, err := tg.GetByID(teamID)
-	if err != nil {
-		return "-"
+func addTeam(teams map[int]domain.Team, teamID int) string {
+	if team, prs := teams[teamID]; prs {
+		return team.Shortname
 	}
 
-	return team.Shortname
+	return "-"
 }

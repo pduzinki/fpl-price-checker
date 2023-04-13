@@ -33,6 +33,8 @@ type Team struct {
 	Shortname string
 }
 
+type Teams map[int]Team
+
 func ParseDate(date string) error {
 	_, err := time.Parse(DateFormat, date)
 

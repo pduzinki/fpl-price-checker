@@ -83,13 +83,12 @@ func NewPriceReportS3Repository() *s3.PriceReportRepository {
 func NewTeamInMemoryRepository() *memory.TeamRepository {
 	tr := memory.NewTeamRepository()
 
-	// NOTE: teams data can be fetched once here, since it is quite static.
-
+	// NOTE: teams data can be fetched here, since it is quite static.
 	wr := Wrapper()
 
 	teams, err := wr.GetTeams()
 	if err != nil {
-		log.Fatal().Err(err).Msg("err TODO")
+		log.Fatal().Err(err).Msg("di.NewTeamInMemoryRepository - failed to get teams data")
 	}
 
 	for _, team := range teams {

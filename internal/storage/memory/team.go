@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/pduzinki/fpl-price-checker/internal/domain"
-	"github.com/pduzinki/fpl-price-checker/internal/storage"
 )
 
 type Team struct {
@@ -33,13 +32,15 @@ func (tr *TeamRepository) Add(teams ...domain.Team) {
 	}
 }
 
-func (tr *TeamRepository) GetByID(id int) (domain.Team, error) {
+func (tr *TeamRepository) GetAll() (map[int]domain.Team, error) {
 	tr.RLock()
 	defer tr.RUnlock()
 
-	if team, prs := tr.teams[id]; prs {
-		return domain.Team(team), nil
+	teams := make(map[int]domain.Team)
+
+	for _, team := range tr.teams {
+		teams[team.ID] = domain.Team(team)
 	}
 
-	return domain.Team{}, storage.ErrDataNotFound
+	return teams, nil
 }
