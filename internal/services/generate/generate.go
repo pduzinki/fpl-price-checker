@@ -18,15 +18,30 @@ type PriceChangeReportAdder interface {
 	Add(ctx context.Context, date string, report domain.PriceChangeReport) error
 }
 
+type TeamAdder interface {
+	Add(teams ...domain.Team)
+}
+
+type TeamGetter interface {
+	GetByID(id int) (domain.Team, error)
+}
+
+type TeamRepository interface {
+	TeamAdder
+	TeamGetter
+}
+
 type GenerateService struct {
 	dg DailyPlayersDataGetter
 	ra PriceChangeReportAdder
+	tr TeamRepository
 }
 
-func NewGenerateService(sg DailyPlayersDataGetter, ra PriceChangeReportAdder) *GenerateService {
+func NewGenerateService(sg DailyPlayersDataGetter, ra PriceChangeReportAdder, tr TeamRepository) *GenerateService {
 	return &GenerateService{
 		dg: sg,
 		ra: ra,
+		tr: tr,
 	}
 }
 
@@ -46,7 +61,7 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 
 	report := domain.PriceChangeReport{
 		Date:    todaysDate,
-		Records: generateRecords(yesterdayPlayers, todayPlayers),
+		Records: generateRecords(yesterdayPlayers, todayPlayers, gs.tr),
 	}
 
 	err = gs.ra.Add(ctx, todaysDate, report)
@@ -57,7 +72,7 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 	return nil
 }
 
-func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData) []domain.Record {
+func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tg TeamGetter) []domain.Record {
 	priceChangedPlayers := make([]domain.Record, 0)
 	newPlayers := make([]domain.Record, 0)
 
@@ -66,6 +81,7 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData) []d
 		if !prs {
 			newPlayers = append(newPlayers, domain.Record{
 				Name:        tv.Name,
+				Team:        addTeam(tg, tv.TeamID),
 				OldPrice:    "-",
 				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
 				Description: "new",
@@ -76,6 +92,7 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData) []d
 		if yv.Price != tv.Price {
 			record := domain.Record{
 				Name:        tv.Name,
+				Team:        addTeam(tg, tv.TeamID),
 				OldPrice:    fmt.Sprintf("%.1f", float64(yv.Price)/10.),
 				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
 				Description: addDescription(yv.Price, tv.Price),
@@ -95,4 +112,13 @@ func addDescription(oldPrice, newPrice int) string {
 		return "drop"
 	}
 	return "rise"
+}
+
+func addTeam(tg TeamGetter, teamID int) string {
+	team, err := tg.GetByID(teamID)
+	if err != nil {
+		return "-"
+	}
+
+	return team.Shortname
 }

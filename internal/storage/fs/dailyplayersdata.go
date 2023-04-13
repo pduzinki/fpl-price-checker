@@ -15,6 +15,7 @@ import (
 
 type Player struct {
 	ID         int
+	TeamID     int
 	Name       string
 	Price      int
 	SelectedBy string

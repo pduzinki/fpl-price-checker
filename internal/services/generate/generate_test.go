@@ -85,7 +85,7 @@ func TestGenerate(t *testing.T) {
 
 		t.Run(test.name, func(t *testing.T) {
 			ctx := context.Background()
-			g := NewGenerateService(test.dg, test.ra)
+			g := NewGenerateService(test.dg, test.ra, nil)
 
 			err := g.GeneratePriceReport(ctx)
 			if !errors.Is(err, test.wantErr) {
@@ -258,7 +258,7 @@ func TestGenerateRecords(t *testing.T) {
 		test := test
 
 		t.Run(test.name, func(t *testing.T) {
-			got := generateRecords(test.yesterdayPlayers, test.todayPlayers)
+			got := generateRecords(test.yesterdayPlayers, test.todayPlayers, nil)
 			assert.ElementsMatch(t, got, test.want)
 		})
 	}

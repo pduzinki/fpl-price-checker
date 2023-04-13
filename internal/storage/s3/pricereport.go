@@ -20,6 +20,7 @@ import (
 
 type Record struct {
 	Name        string
+	Team        string
 	OldPrice    string
 	NewPrice    string
 	Description string
