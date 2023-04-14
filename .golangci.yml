@@ -8,7 +8,7 @@ linters:
   disable-all: true
   enable:
     - errcheck
-    # - govet
+    - govet
     - staticcheck
     - typecheck
     - unused
