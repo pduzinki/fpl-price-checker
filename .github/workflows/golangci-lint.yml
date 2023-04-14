@@ -16,7 +16,7 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     env:
-      GOGC: 5
+      GOGC: 50
     steps:
       - uses: actions/setup-go@v3
         with:
