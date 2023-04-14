@@ -15,8 +15,6 @@ jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
-    # env:
-    #   GOGC: 20
     steps:
       - uses: actions/setup-go@v3
         with:
@@ -26,4 +24,3 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.52.2
-          # args: --concurrency 1 --timeout 5m0s
