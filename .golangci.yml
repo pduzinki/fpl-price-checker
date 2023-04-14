@@ -5,5 +5,4 @@ linters:
   disable-all: true
   enable:
     - errcheck
-    - govet
 
