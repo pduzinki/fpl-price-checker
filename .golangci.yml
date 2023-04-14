@@ -6,3 +6,8 @@ linters:
   enable:
     - errcheck
     - govet
+    - staticcheck
+    - typecheck
+    - unused
+    - ineffassign
+    - gosimple
