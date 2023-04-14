@@ -1,8 +1,16 @@
 run:
   fast: true
+  concurrency: 1
+  allow-parallel-runners: false
+  timeout: 5m
 
 linters:
   disable-all: true
   enable:
     - errcheck
-
+    - govet
+    - staticcheck
+    - typecheck
+    - unused
+    - ineffassign
+    - gosimple
