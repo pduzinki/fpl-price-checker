@@ -80,7 +80,8 @@ func (gs *GenerateService) GeneratePriceReport(ctx context.Context) error {
 }
 
 func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, teams map[int]domain.Team) []domain.Record {
-	priceChangedPlayers := make([]Record, 0)
+	risePlayers := make([]Record, 0)
+	dropPlayers := make([]Record, 0)
 	newPlayers := make([]Record, 0)
 
 	for tk, tv := range todayPlayers {
@@ -96,29 +97,25 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tea
 			continue
 		}
 
-		if yv.Price != tv.Price {
-			selectedBy, err := strconv.ParseFloat(tv.SelectedBy, 64)
-			if err != nil {
-				selectedBy = 0.0
-			}
-
-			record := Record{
-				Name:        tv.Name,
-				Team:        addTeam(teams, tv.TeamID),
-				OldPrice:    fmt.Sprintf("%.1f", float64(yv.Price)/10.),
-				NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
-				Description: addDescription(yv.Price, tv.Price),
-				SelectedBy:  selectedBy,
-			}
-
-			priceChangedPlayers = append(priceChangedPlayers, record)
+		if yv.Price > tv.Price {
+			dropPlayers = append(dropPlayers, newRecord(yv, tv, teams))
+		} else if yv.Price < tv.Price {
+			risePlayers = append(risePlayers, newRecord(yv, tv, teams))
 		}
 	}
 
-	sort.Slice(priceChangedPlayers, func(i, j int) bool {
-		return priceChangedPlayers[i].SelectedBy > priceChangedPlayers[j].SelectedBy
+	sort.Slice(risePlayers, func(i, j int) bool {
+		return risePlayers[i].SelectedBy > risePlayers[j].SelectedBy
 	})
 
+	sort.Slice(dropPlayers, func(i, j int) bool {
+		return dropPlayers[i].SelectedBy > dropPlayers[j].SelectedBy
+	})
+
+	priceChangedPlayers := make([]Record, 0)
+
+	priceChangedPlayers = append(priceChangedPlayers, risePlayers...)
+	priceChangedPlayers = append(priceChangedPlayers, dropPlayers...)
 	priceChangedPlayers = append(priceChangedPlayers, newPlayers...)
 
 	records := make([]domain.Record, 0, len(priceChangedPlayers))
@@ -127,6 +124,24 @@ func generateRecords(yesterdayPlayers, todayPlayers domain.DailyPlayersData, tea
 	}
 
 	return records
+}
+
+func newRecord(yv, tv domain.Player, teams domain.Teams) Record {
+	selectedBy, err := strconv.ParseFloat(tv.SelectedBy, 64)
+	if err != nil {
+		selectedBy = 0.0
+	}
+
+	record := Record{
+		Name:        tv.Name,
+		Team:        addTeam(teams, tv.TeamID),
+		OldPrice:    fmt.Sprintf("%.1f", float64(yv.Price)/10.),
+		NewPrice:    fmt.Sprintf("%.1f", float64(tv.Price)/10.),
+		Description: addDescription(yv.Price, tv.Price),
+		SelectedBy:  selectedBy,
+	}
+
+	return record
 }
 
 func addDescription(oldPrice, newPrice int) string {
