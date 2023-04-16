@@ -15,7 +15,7 @@ var generateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 
-		gs := di.NewGenerateService()
+		gs := di.NewGenerateServiceCLI()
 
 		err := gs.GeneratePriceReport(ctx)
 		if err != nil {

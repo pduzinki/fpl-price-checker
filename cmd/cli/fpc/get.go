@@ -16,7 +16,7 @@ var getReportCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 
-		gs := di.NewGetService()
+		gs := di.NewGetServiceCLI()
 
 		report, err := gs.GetLatestReport(ctx)
 		if err != nil {

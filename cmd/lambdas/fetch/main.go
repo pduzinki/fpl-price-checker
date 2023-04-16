@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	fetchService := di.NewFetchServiceS3()
+	fetchService := di.NewFetchServiceLambdas()
 
 	lambda.Start(fetchService.Fetch)
 }

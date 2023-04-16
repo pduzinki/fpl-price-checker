@@ -15,7 +15,7 @@ var fetchCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 
-		fetchService := di.NewFetchService()
+		fetchService := di.NewFetchServiceCLI()
 
 		err := fetchService.Fetch(ctx)
 		if err != nil {

@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	gs := di.NewGetServiceS3()
+	gs := di.NewGetServiceLambdas()
 
 	lambda.Start(gs.GetLatestReport)
 }

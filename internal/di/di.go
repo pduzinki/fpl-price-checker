@@ -67,8 +67,6 @@ func NewPriceReportFsRepository() *fs.PriceReportRepository {
 	return rr
 }
 
-// TODO DRY: merge fs and s3 service constructors
-
 func NewPriceReportS3Repository() *s3.PriceReportRepository {
 	cfg := Config()
 
@@ -98,14 +96,16 @@ func NewTeamInMemoryRepository() *memory.TeamRepository {
 	return &tr
 }
 
-func NewFetchService() *fetch.FetchService {
+// NewFetchServiceCLI builds 'fetch' service for use in CLI build
+func NewFetchServiceCLI() *fetch.FetchService {
 	wr := Wrapper()
 	dr := DailyPlayersDataFsRepository()
 
 	return fetch.NewFetchService(wr, dr)
 }
 
-func NewFetchServiceS3() *fetch.FetchService {
+// NewFetchServiceLambdas builds 'fetch' service for use in Lambdas build
+func NewFetchServiceLambdas() *fetch.FetchService {
 	wr := Wrapper()
 	dr := DailyPlayersDataS3Repository()
 
@@ -113,7 +113,8 @@ func NewFetchServiceS3() *fetch.FetchService {
 
 }
 
-func NewGenerateService() *generate.GenerateService {
+// NewGenerateServiceCLI builds 'generate' service for use in CLI build
+func NewGenerateServiceCLI() *generate.GenerateService {
 	pr := DailyPlayersDataFsRepository()
 	rr := NewPriceReportFsRepository()
 	tr := NewTeamInMemoryRepository()
@@ -121,7 +122,8 @@ func NewGenerateService() *generate.GenerateService {
 	return generate.NewGenerateService(pr, rr, tr)
 }
 
-func NewGenerateServiceS3() *generate.GenerateService {
+// NewGenerateServiceLambdas builds 'generate' service for use in Lambdas build
+func NewGenerateServiceLambdas() *generate.GenerateService {
 	pr := DailyPlayersDataS3Repository()
 	rr := NewPriceReportS3Repository()
 	tr := NewTeamInMemoryRepository()
@@ -129,20 +131,22 @@ func NewGenerateServiceS3() *generate.GenerateService {
 	return generate.NewGenerateService(pr, rr, tr)
 }
 
-func NewGetService() *get.GetService {
+// NewGetServiceCLI builds 'get' service for use in CLI build
+func NewGetServiceCLI() *get.GetService {
 	rr := NewPriceReportFsRepository()
 
 	return get.NewGetService(rr)
 }
 
-func NewGetServiceS3() *get.GetService {
+// NewGetServiceLambdas builds 'get' service for use in Lambdas build
+func NewGetServiceLambdas() *get.GetService {
 	rr := NewPriceReportS3Repository()
 
 	return get.NewGetService(rr)
 }
 
 func NewServer() *echo.Echo {
-	gs := NewGetService()
+	gs := NewGetServiceCLI()
 
 	s := rest.NewServer(gs)
 
