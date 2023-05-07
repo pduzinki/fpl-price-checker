@@ -52,7 +52,7 @@ func (gs *GetService) GetLatestReport(ctx context.Context) (domain.PriceChangeRe
 
 func (gs *GetService) GetReportByDate(ctx context.Context, date string) (domain.PriceChangeReport, error) {
 	if err := domain.ParseDate(date); err != nil {
-		return domain.PriceChangeReport{}, err
+		return domain.PriceChangeReport{}, fmt.Errorf("get.GetService.GetReportByDate failed to parse date: %w", err)
 	}
 
 	report, err := gs.rg.GetByDate(ctx, date)

@@ -293,7 +293,14 @@ resource "aws_apigatewayv2_integration" "fpc_api_gateway" {
 resource "aws_apigatewayv2_route" "fpc_get_latest" {
   api_id = aws_apigatewayv2_api.fpc_api_gateway.id
 
-  route_key = "GET /latest"
+  route_key = "GET /report/latest"
+  target    = "integrations/${aws_apigatewayv2_integration.fpc_api_gateway.id}"
+}
+
+resource "aws_apigatewayv2_route" "fpc_get_by_date" {
+  api_id = aws_apigatewayv2_api.fpc_api_gateway.id
+
+  route_key = "GET /report/{date}"
   target    = "integrations/${aws_apigatewayv2_integration.fpc_api_gateway.id}"
 }
 
