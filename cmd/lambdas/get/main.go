@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/pduzinki/fpl-price-checker/internal/di"
 	"github.com/pduzinki/fpl-price-checker/internal/domain"
@@ -15,13 +17,35 @@ import (
 func main() {
 	gs := di.NewGetServiceLambdas()
 
-	lambda.Start(func(ctx context.Context, req events.APIGatewayProxyRequest) (domain.PriceChangeReport, error) {
+	lambda.Start(func(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 		log.Info().Msg(fmt.Sprintf("api gateway request: %v", req))
 
+		var report domain.PriceChangeReport
+		var err error
+
 		if date, prs := req.PathParameters["date"]; prs {
-			return gs.GetReportByDate(ctx, date)
+			report, err = gs.GetReportByDate(ctx, date)
+		} else {
+			report, err = gs.GetLatestReport(ctx)
 		}
 
-		return gs.GetLatestReport(ctx)
+		if err != nil {
+			return events.APIGatewayProxyResponse{
+				Headers:    map[string]string{"Content-Type": "application/json"},
+				Body:       `{"message": "404 not found"}`,
+				StatusCode: http.StatusNotFound,
+			}, nil
+		}
+
+		body, err := json.Marshal(report)
+		if err != nil {
+			return events.APIGatewayProxyResponse{}, err
+		}
+
+		return events.APIGatewayProxyResponse{
+			Headers:    map[string]string{"Content-Type": "application/json"},
+			Body:       string(body),
+			StatusCode: http.StatusOK,
+		}, nil
 	})
 }
