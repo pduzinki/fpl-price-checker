@@ -30,6 +30,8 @@ func main() {
 		}
 
 		if err != nil {
+			log.Error().Msg(fmt.Sprintf("failed to get report: %v", err))
+
 			return events.APIGatewayProxyResponse{
 				Headers:    map[string]string{"Content-Type": "application/json"},
 				Body:       `{"message": "404 not found"}`,
@@ -39,7 +41,13 @@ func main() {
 
 		body, err := json.Marshal(report)
 		if err != nil {
-			return events.APIGatewayProxyResponse{}, err
+			log.Error().Msg(fmt.Sprintf("failed to marshal report: %v", err))
+
+			return events.APIGatewayProxyResponse{
+				Headers:    map[string]string{"Content-Type": "application/json"},
+				Body:       `{"message": "500 internal server error"}`,
+				StatusCode: http.StatusInternalServerError,
+			}, nil
 		}
 
 		return events.APIGatewayProxyResponse{
