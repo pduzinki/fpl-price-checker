@@ -16,7 +16,16 @@ resource "aws_s3_bucket" "fpc_lambda_zip_storage_bucket" {
   bucket = random_pet.fpc_lambda_zip_storage_bucket_name.id
 }
 
+resource "aws_s3_bucket_ownership_controls" "fpc_lambda_zip_storage_oc" {
+  bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
 resource "aws_s3_bucket_acl" "fpc_lambda_zip_storage_bucket_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.fpc_lambda_zip_storage_oc]
+
   bucket = aws_s3_bucket.fpc_lambda_zip_storage_bucket.id
   acl    = "private"
 }
